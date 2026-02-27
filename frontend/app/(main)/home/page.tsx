@@ -81,13 +81,13 @@ interface TrendingItem {
   id: number;
   keyword: string;
   keyword_ko?: string | null;
-  kscore: number;
+  hscore: number;
   topic: string | null;
   country_codes: string[];
   cluster_ids?: string[];
   is_touching?: boolean;
   event_count?: number;
-  severity?: number;
+  warmth?: number;
   reason?: string;
   calculated_at?: string;
   first_event_at?: string | null;
@@ -164,12 +164,12 @@ function TrendingSignals({ item, delay }: { item: TrendingItem; delay: number })
     },
     {
       label: t(lang, "signal_severity"),
-      value: (item.severity ?? 0) / 100,
-      display: String(item.severity ?? 0),
+      value: (item.warmth ?? 0) / 100,
+      display: String(item.warmth ?? 0),
       color:
-        (item.severity ?? 0) >= 75 ? "bg-red-500" :
-        (item.severity ?? 0) >= 50 ? "bg-orange-500" :
-        (item.severity ?? 0) >= 25 ? "bg-yellow-500" :
+        (item.warmth ?? 0) >= 75 ? "bg-red-500" :
+        (item.warmth ?? 0) >= 50 ? "bg-orange-500" :
+        (item.warmth ?? 0) >= 25 ? "bg-yellow-500" :
         "bg-green-600",
       tooltip: t(lang, "signal_severity_tooltip"),
     },
@@ -312,10 +312,10 @@ function TrendingCard({ item, rank, delay = 0, userPlan = "free" }: { item: Tren
   const lang = useAppStore((s) => s.lang);
   const [showHistory, setShowHistory] = useState(false);
   const topic = item.topic ?? "unknown";
-  const k = roundKScore(item.kscore);
+  const k = roundKScore(item.hscore);
   const isCritical = k >= 7.0;
   const isAlert = k >= 5.0;
-  const badge = getKScoreBadge(item.kscore, lang);
+  const badge = getKScoreBadge(item.hscore, lang);
   const clusterId = item.cluster_ids?.[0];
   // 영어 모드: 원문 영어 키워드 / 한국어 모드: 번역된 한국어 우선
   const displayTitle = lang === "en" ? item.keyword : (item.keyword_ko ?? item.keyword);
@@ -329,7 +329,7 @@ function TrendingCard({ item, rank, delay = 0, userPlan = "free" }: { item: Tren
         "card-enter rounded-xl border-l-4 border border-border bg-card p-4 relative",
         "transition-all hover:bg-card/80",
         clusterId && "cursor-pointer",
-        kscoreAccent(item.kscore),
+        kscoreAccent(item.hscore),
         badge.glow,
         isCritical && "kscore-crisis-pulse",
         isAlert && !isCritical && "card-glow-pulse",

@@ -297,7 +297,7 @@ class NormalizeResult:
     lon: Optional[float]
     geohash5: Optional[str]
     country_code: Optional[str]
-    severity: int  # warmth score (0~100)
+    warmth: int  # warmth score (0~100)
     source_tier: str
     confidence: float
     dedup_key: str
@@ -464,7 +464,7 @@ def is_relevant(result: "NormalizeResult") -> bool:
     """
     if result.topic != "unknown":
         return True
-    return result.severity > 40
+    return result.warmth > 40
 
 
 def normalize(
@@ -495,7 +495,7 @@ def normalize(
             topic="unknown",
             entity_anchor=None,
             lat=None, lon=None, geohash5=None, country_code=None,
-            severity=0,
+            warmth=0,
             source_tier=source_tier,
             confidence=0.0,
             dedup_key=_make_dedup_key(raw_text),
@@ -542,7 +542,7 @@ def normalize(
         lon=lon,
         geohash5=geohash5,
         country_code=country_code,
-        severity=warmth,
+        warmth=warmth,
         source_tier=source_tier,
         confidence=confidence,
         dedup_key=dedup_key,

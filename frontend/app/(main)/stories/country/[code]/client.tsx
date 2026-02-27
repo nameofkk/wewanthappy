@@ -19,20 +19,20 @@ interface ClusterOut {
   lat: number | null;
   lon: number | null;
   country_code: string | null;
-  severity: number;
+  warmth: number;
   confidence: number;
   event_count: number;
   is_touching: boolean;
   is_verified: boolean;
-  kscore: number;
+  hscore: number;
   first_event_at: string;
   last_event_at: string;
 }
 
-function getSeverityColor(severity: number): string {
-  if (severity >= 75) return "#ef4444";
-  if (severity >= 50) return "#f97316";
-  if (severity >= 25) return "#eab308";
+function getWarmthColor(warmth: number): string {
+  if (warmth >= 75) return "#ef4444";
+  if (warmth >= 50) return "#f97316";
+  if (warmth >= 25) return "#eab308";
   return "#22c55e";
 }
 
@@ -98,8 +98,8 @@ export default function CountryIssuesPage() {
         )}
 
         {clusters?.map((cluster) => {
-          const color = getSeverityColor(cluster.severity);
-          const level = (cluster.severity >= 75 ? 3 : cluster.severity >= 50 ? 2 : cluster.severity >= 25 ? 1 : 0) as 0 | 1 | 2 | 3;
+          const color = getWarmthColor(cluster.warmth);
+          const level = (cluster.warmth >= 75 ? 3 : cluster.warmth >= 50 ? 2 : cluster.warmth >= 25 ? 1 : 0) as 0 | 1 | 2 | 3;
           const levelLabel = getTensionLevelLabel(level, lang);
           const topicKey = `topic_${cluster.topic}` as Parameters<typeof t>[1];
           const clusterTitle = lang === "en" ? cluster.title : (cluster.title_ko ?? cluster.title);
@@ -139,9 +139,9 @@ export default function CountryIssuesPage() {
                     {clusterTitle}
                   </h3>
                   <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
-                    <span>{t(lang, "country_stat_severity")} <span className="font-medium" style={{ color }}>{cluster.severity}</span></span>
+                    <span>{t(lang, "country_stat_severity")} <span className="font-medium" style={{ color }}>{cluster.warmth}</span></span>
                     <span>{t(lang, "country_stat_events")} {cluster.event_count}</span>
-                    <span>KScore {cluster.kscore.toFixed(1)}</span>
+                    <span>KScore {cluster.hscore.toFixed(1)}</span>
                     <span className="ml-auto">{formatTime(cluster.last_event_at)}</span>
                   </div>
                 </div>

@@ -275,7 +275,7 @@ export default function SettingsPage() {
   // prefs 로드 시 알림 상태 동기화
   useEffect(() => {
     if (prefs) {
-      setKscoreValue(prefs.min_kscore ?? 3.0);
+      setKscoreValue(prefs.min_hscore ?? 3.0);
       setSelectedTopics(prefs.topics ?? []);
       const hasQuiet = !!(prefs.quiet_hours_start && prefs.quiet_hours_end);
       setQuietEnabled(hasQuiet);
@@ -320,7 +320,7 @@ export default function SettingsPage() {
   }
 
   function handleSaveKscore() {
-    saveNotifPatch({ min_kscore: kscoreValue });
+    saveNotifPatch({ min_hscore: kscoreValue });
   }
 
   function handleToggleTopic(topic: string) {

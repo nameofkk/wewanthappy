@@ -28,7 +28,7 @@ interface EventOut {
   title_ko?: string | null;
   body: string;
   topic: string;
-  severity: number;
+  warmth: number;
   confidence: number;
   source_tier: string | null;
   source_name: string | null;
@@ -47,12 +47,12 @@ interface ClusterDetail {
   lat: number | null;
   lon: number | null;
   country_code: string | null;
-  severity: number;
+  warmth: number;
   confidence: number;
   event_count: number;
   is_touching: boolean;
   is_verified: boolean;
-  kscore: number;
+  hscore: number;
   first_event_at: string;
   last_event_at: string;
   events: EventOut[];
@@ -134,7 +134,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
 
           <div className="grid grid-cols-3 gap-2 text-center mb-4">
             <div className="rounded-lg bg-secondary p-2">
-              <p className="text-lg font-bold">{issue.severity}</p>
+              <p className="text-lg font-bold">{issue.warmth}</p>
               <p className="text-[10px] text-muted-foreground">{t(lang, "issue_stat_severity")}</p>
             </div>
             <div className="rounded-lg bg-secondary p-2">
@@ -148,7 +148,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
           </div>
 
           <div>
-            <KScoreBar kscore={issue.kscore} />
+            <KScoreBar hscore={issue.hscore} />
           </div>
 
           <div className="flex items-center justify-between mt-3 text-[10px] text-muted-foreground">
@@ -174,7 +174,7 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
             </h2>
             <div className="space-y-3">
               {[...issue.events]
-                .sort((a, b) => b.severity - a.severity)
+                .sort((a, b) => b.warmth - a.warmth)
                 .map((event, idx, arr) => {
                 const tier = event.source_tier ?? "C";
                 const eventNew = isNew(event.event_time);
@@ -212,12 +212,12 @@ export default function IssueDetailPage({ params }: { params: { id: string } }) 
                         <span className="text-[10px] text-muted-foreground/60">·</span>
                         <span className={cn(
                           "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-                          event.severity >= 75 ? "bg-red-500/20 text-red-400" :
-                          event.severity >= 50 ? "bg-orange-500/20 text-orange-400" :
-                          event.severity >= 25 ? "bg-yellow-500/20 text-yellow-400" :
+                          event.warmth >= 75 ? "bg-red-500/20 text-red-400" :
+                          event.warmth >= 50 ? "bg-orange-500/20 text-orange-400" :
+                          event.warmth >= 25 ? "bg-yellow-500/20 text-yellow-400" :
                           "bg-green-600/20 text-green-500"
                         )}>
-                          {t(lang, "issue_severity_badge", { n: event.severity })}
+                          {t(lang, "issue_severity_badge", { n: event.warmth })}
                         </span>
                         <span className="text-[10px] text-muted-foreground/60">·</span>
                         <span className="text-[10px] text-muted-foreground">

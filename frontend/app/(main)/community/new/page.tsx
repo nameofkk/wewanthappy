@@ -20,7 +20,7 @@ interface IssueItem {
   title: string;
   title_ko: string | null;
   country_code: string | null;
-  severity: number;
+  warmth: number;
   topic: string | null;
 }
 
@@ -66,7 +66,7 @@ export default function NewPostPage() {
   useEffect(() => {
     if (!showIssuePicker) return;
     setIssueLoading(true);
-    fetch(`${API_BASE}/stories?limit=50&severity_min=30`)
+    fetch(`${API_BASE}/stories?limit=50&warmth_min=30`)
       .then((r) => r.json())
       .then((data) => setIssues(Array.isArray(data) ? data : []))
       .catch(() => setIssues([]))
@@ -425,7 +425,7 @@ export default function NewPostPage() {
                               </span>
                             )}
                             <span className="text-[10px] text-muted-foreground">
-                              {t(lang, "new_post_severity")} {issue.severity}
+                              {t(lang, "new_post_severity")} {issue.warmth}
                             </span>
                           </div>
                         </div>

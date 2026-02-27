@@ -16,7 +16,7 @@ interface EventItem {
   title_ko: string | null;
   country_code: string | null;
   topic: string;
-  severity: number;
+  warmth: number;
   source_tier: string;
   confidence: number;
   event_time: string;
@@ -36,18 +36,18 @@ export default function AdminEventsPage() {
   const [page, setPage] = useState(1);
   const [sourceFilter, setSourceFilter] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
-  const [severityFilter, setSeverityFilter] = useState<string>("");
+  const [warmthFilter, setWarmthFilter] = useState<string>("");
   const [titleSearch, setTitleSearch] = useState("");
 
   const { data, isLoading } = useQuery<{ total: number; items: EventItem[] }>({
-    queryKey: ["admin-events", page, sourceFilter, countryFilter, severityFilter, titleSearch],
+    queryKey: ["admin-events", page, sourceFilter, countryFilter, warmthFilter, titleSearch],
     queryFn: async () => {
       if (!user) throw new Error("Unauthorized");
       const token = await user.getIdToken();
       const params = new URLSearchParams({ page: String(page), limit: "30" });
       if (sourceFilter) params.append("source", sourceFilter);
       if (countryFilter) params.append("country", countryFilter);
-      if (severityFilter) params.append("severity", severityFilter);
+      if (warmthFilter) params.append("warmth", warmthFilter);
       if (titleSearch) params.append("search", titleSearch);
       const res = await fetch(`${API_BASE}/admin/events?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -102,8 +102,8 @@ export default function AdminEventsPage() {
           maxLength={4}
         />
         <select
-          value={severityFilter}
-          onChange={(e) => { setSeverityFilter(e.target.value); setPage(1); }}
+          value={warmthFilter}
+          onChange={(e) => { setWarmthFilter(e.target.value); setPage(1); }}
           className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none"
         >
           <option value="">{t(lang, "admin_severity")}: {t(lang, "admin_all")}</option>
@@ -176,9 +176,9 @@ export default function AdminEventsPage() {
                       <td className="px-3 py-2.5">
                         <span className={cn(
                           "text-xs font-bold tabular-nums",
-                          e.severity >= 4 ? "text-red-400" : e.severity >= 3 ? "text-orange-400" : e.severity >= 2 ? "text-yellow-400" : "text-muted-foreground"
+                          e.warmth >= 4 ? "text-red-400" : e.warmth >= 3 ? "text-orange-400" : e.warmth >= 2 ? "text-yellow-400" : "text-muted-foreground"
                         )}>
-                          {e.severity}
+                          {e.warmth}
                         </span>
                       </td>
                       <td className="px-3 py-2.5">
@@ -215,8 +215,8 @@ export default function AdminEventsPage() {
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex gap-3">
-                      <span className={cn("font-bold tabular-nums", e.severity >= 4 ? "text-red-400" : e.severity >= 3 ? "text-orange-400" : e.severity >= 2 ? "text-yellow-400" : "text-muted-foreground")}>
-                        sev {e.severity}
+                      <span className={cn("font-bold tabular-nums", e.warmth >= 4 ? "text-red-400" : e.warmth >= 3 ? "text-orange-400" : e.warmth >= 2 ? "text-yellow-400" : "text-muted-foreground")}>
+                        sev {e.warmth}
                       </span>
                       <span className="tabular-nums">{(e.confidence * 100).toFixed(0)}%</span>
                     </div>

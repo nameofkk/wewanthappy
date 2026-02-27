@@ -48,8 +48,8 @@ class AreaOut(BaseModel):
 
 class PreferencesOut(BaseModel):
     language: str
-    min_severity: int
-    min_kscore: float
+    min_warmth: int
+    min_hscore: float
     topics: list[str]
     quiet_hours_start: Optional[str]
     quiet_hours_end: Optional[str]
@@ -58,8 +58,8 @@ class PreferencesOut(BaseModel):
 
 class PreferencesPatch(BaseModel):
     language: Optional[str] = None
-    min_severity: Optional[int] = None
-    min_kscore: Optional[float] = None
+    min_warmth: Optional[int] = None
+    min_hscore: Optional[float] = None
     topics: Optional[list[str]] = None
     quiet_hours_start: Optional[str] = None
     quiet_hours_end: Optional[str] = None
@@ -279,13 +279,13 @@ async def update_preferences(
 
     if body.language is not None:
         pref.language = body.language
-    if body.min_severity is not None:
-        pref.min_severity = body.min_severity
-    if body.min_kscore is not None:
+    if body.min_warmth is not None:
+        pref.min_severity = body.min_warmth
+    if body.min_hscore is not None:
         # Free 플랜은 3.0 고정, Pro는 3.0~10.0, Pro+는 1.5~10.0 (0-10 스케일)
         plan_lower = current_user.plan.lower()
         min_allowed = 3.0 if plan_lower == "free" else (1.5 if plan_lower == "pro_plus" else 3.0)
-        pref.min_kscore = max(min_allowed, min(body.min_kscore, 10.0))
+        pref.min_kscore = max(min_allowed, min(body.min_hscore, 10.0))
     if body.topics is not None:
         # 토픽 필터는 Pro 이상만 허용
         if body.topics and _PLAN_ORDER.get(current_user.plan.lower(), 0) < _PLAN_ORDER.get("pro", 1):

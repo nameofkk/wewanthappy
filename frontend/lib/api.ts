@@ -53,7 +53,7 @@ export interface HScoreHistoryPoint {
 // Backward compatibility alias
 export interface KScoreHistoryPoint {
   time: string;
-  kscore: number;
+  hscore: number;
 }
 
 export function useKScoreHistory(
@@ -329,8 +329,8 @@ export interface UserArea {
 
 export interface UserPreferences {
   language: string;
-  min_severity: number;
-  min_kscore: number;
+  min_warmth: number;
+  min_hscore: number;
   topics: string[];
   quiet_hours_start: string | null;
   quiet_hours_end: string | null;

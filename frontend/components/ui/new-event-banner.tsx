@@ -13,7 +13,7 @@ interface PeekItem {
   id: number;
   keyword: string;
   keyword_ko: string | null;
-  kscore: number;
+  hscore: number;
   topic: string | null;
   cluster_ids: string[];
   is_touching: boolean;
@@ -163,7 +163,7 @@ export function NewEventBanner() {
 
       // 이슈 배너
       const res = await fetch(
-        `${API_BASE}/trending/peek?min_kscore=1&since=${encodeURIComponent(since)}`
+        `${API_BASE}/trending/peek?min_hscore=1&since=${encodeURIComponent(since)}`
       );
       if (!res.ok) return;
 
@@ -307,7 +307,7 @@ export function NewEventBanner() {
                 </span>
               )}
               <span className="text-[10px] text-muted-foreground/50 font-mono ml-auto">
-                KScore {item?.kscore.toFixed(1)}
+                KScore {item?.hscore.toFixed(1)}
               </span>
             </div>
             <p className="text-sm font-medium text-foreground truncate">

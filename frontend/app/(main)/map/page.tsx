@@ -48,7 +48,7 @@ interface Cluster {
   event_count: number;
   is_touching: boolean;
   is_verified: boolean;
-  kscore: number;
+  hscore: number;
   first_event_at: string;
   last_event_at: string;
   grouped_count?: number;
@@ -83,7 +83,7 @@ function getTopicLabel(topic: string, lang: Lang): string {
 
 function repScore(c: Cluster): number {
   // KScore 우선, warmth 동점 처리 — 홈 트렌딩(kscore 내림차순)과 동일 기준
-  return c.kscore * 1000 + c.warmth;
+  return c.hscore * 1000 + c.warmth;
 }
 
 function groupByPixelProximity(clusters: Cluster[], map: any, threshold: number): Cluster[] {
@@ -112,7 +112,7 @@ function groupByPixelProximity(clusters: Cluster[], map: any, threshold: number)
     const group = indices.map((i) => clusters[i]);
     const lead = group.reduce((a, b) => (repScore(a) > repScore(b) ? a : b));
     const totalEvents = group.reduce((s, c) => s + (c.grouped_total_events ?? c.event_count), 0);
-    return { ...lead, grouped_total_events: totalEvents, warmth: Math.max(...group.map((c) => c.warmth)), kscore: Math.max(...group.map((c) => c.kscore)), is_touching: group.some((c) => c.is_touching), grouped_count: group.reduce((sum, c) => sum + (c.grouped_count ?? 1), 0) };
+    return { ...lead, grouped_total_events: totalEvents, warmth: Math.max(...group.map((c) => c.warmth)), hscore: Math.max(...group.map((c) => c.hscore)), is_touching: group.some((c) => c.is_touching), grouped_count: group.reduce((sum, c) => sum + (c.grouped_count ?? 1), 0) };
   });
 }
 
@@ -144,7 +144,7 @@ function groupClustersByCountry(clusters: Cluster[]): Cluster[] {
       event_count: lead.event_count,
       grouped_total_events: totalEvents,
       warmth: Math.max(...group.map((c) => c.warmth)),
-      kscore: Math.max(...group.map((c) => c.kscore)),
+      hscore: Math.max(...group.map((c) => c.hscore)),
       is_touching: group.some((c) => c.is_touching),
       grouped_count: group.length,
     });
@@ -156,8 +156,8 @@ function groupClustersByCountry(clusters: Cluster[]): Cluster[] {
 // ── 팝업 ──────────────────────────────────────────────────────────────────
 function ClusterPopup({ cluster, onClose, isPreview = false }: { cluster: Cluster; onClose: () => void; isPreview?: boolean }) {
   const lang = useAppStore((s) => s.lang);
-  const color = getKScoreColor(cluster.kscore);
-  const kLabel = getKScoreLabel(cluster.kscore, lang);
+  const color = getKScoreColor(cluster.hscore);
+  const kLabel = getKScoreLabel(cluster.hscore, lang);
   // 영어 모드: 원문 / 한국어 모드: 번역본 우선
   const displayTitle = lang === "en" ? cluster.title : (cluster.title_ko ?? cluster.title);
 
@@ -206,7 +206,7 @@ function ClusterPopup({ cluster, onClose, isPreview = false }: { cluster: Cluste
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-lg p-2" style={{ background: `${color}15`, border: `1px solid ${color}30` }}>
-          <p className="text-lg font-bold" style={{ color }}>{roundKScore(cluster.kscore).toFixed(1)}</p>
+          <p className="text-lg font-bold" style={{ color }}>{roundKScore(cluster.hscore).toFixed(1)}</p>
           <p className="flex items-center justify-center gap-0.5 text-[10px] text-muted-foreground">
             KScore
             <InfoTooltip direction="up" text={t(lang, "map_popup_kscore_tooltip")} />
@@ -284,7 +284,7 @@ function NewsTicker({ clusters, isPreview = false }: { clusters: Cluster[]; isPr
       className={`inline-flex items-center gap-2 px-6 transition-colors ${isPreview ? "cursor-default" : "cursor-pointer hover:text-white"}`}
       onClick={isPreview ? undefined : () => { window.location.href = `/stories/${c.id}`; }}
     >
-      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: getKScoreColor(c.kscore) }} />
+      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: getKScoreColor(c.hscore) }} />
       <span className="text-[11px] text-slate-300/80">
         {lang === "en" ? c.title : (c.title_ko ?? c.title)}
       </span>
@@ -412,7 +412,7 @@ export default function MapPage() {
         const displayCount = (cluster.grouped_count ?? 1) > 1 ? cluster.grouped_count! : cluster.event_count;
         const sizeBase = cluster.grouped_total_events ?? cluster.event_count;
         const size = Math.max(28, Math.min(56, 22 + Math.sqrt(sizeBase) * 4));
-        const color = getKScoreColor(cluster.kscore);
+        const color = getKScoreColor(cluster.hscore);
         const markerEl = document.createElement("div");
         // position:relative 사용 금지 — maplibre-gl이 .maplibregl-marker에
         // position:absolute를 적용하는데, inline position:relative가 이를 덮어써서

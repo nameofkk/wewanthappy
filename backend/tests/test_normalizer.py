@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from worker.processor.normalizer import (
     normalize,
     _classify_topic,
-    _calculate_severity,
+    _calculate_warmth,
     _extract_geo,
     _make_dedup_key,
     _make_title,
@@ -53,15 +53,15 @@ class TestClassifyTopic:
 
 class TestCalculateSeverity:
     def test_base_conflict(self):
-        sev = _calculate_severity("troops moved", "conflict")
+        sev = _calculate_warmth("troops moved", "conflict")
         assert sev == 55  # base only
 
     def test_upward_modifier(self):
-        sev = _calculate_severity("killed and dead, casualties reported", "conflict")
+        sev = _calculate_warmth("killed and dead, casualties reported", "conflict")
         assert sev == 55 + 10 + 10 + 8  # base + killed + dead + casualties = 83
 
     def test_downward_modifier(self):
-        sev = _calculate_severity("allegedly missile strike unconfirmed", "conflict")
+        sev = _calculate_warmth("allegedly missile strike unconfirmed", "conflict")
         # base=55, +10(missile strike), -8(alleged), -10(unconfirmed) = 47
         assert sev == 47
 
@@ -69,16 +69,16 @@ class TestCalculateSeverity:
         text = ("nuclear chemical weapon killed dead casualties deaths martial law mobilization "
                 "airstrike missile strike explosion bomb infrastructure power grid hospital "
                 "capital city center civilian")
-        sev = _calculate_severity(text, "coup")
+        sev = _calculate_warmth(text, "coup")
         assert sev == 100
 
     def test_clamp_min_0(self):
         text = "alleged unconfirmed rumor reportedly claims possibly denied false alarm"
-        sev = _calculate_severity(text, "diplomacy")
+        sev = _calculate_warmth(text, "diplomacy")
         assert sev == 0
 
     def test_unknown_base(self):
-        sev = _calculate_severity("something happened", "unknown")
+        sev = _calculate_warmth("something happened", "unknown")
         assert sev == 25
 
 

@@ -130,7 +130,7 @@ def _key_obs_count(cluster_key: str) -> str:
 async def evaluate_spike(
     cluster_id: str,
     cluster_key: str,
-    severity: int,
+    warmth: int,
     redis,
     source_id: str = "",
 ) -> bool:
@@ -161,13 +161,13 @@ async def evaluate_spike(
     triggered = (
         (c1 >= C1_THRESHOLD or c10 >= C10_THRESHOLD)
         and ratio >= RATIO_THRESHOLD
-        and severity >= SEVERITY_MIN
+        and warmth >= SEVERITY_MIN
         and unique_sources >= MIN_UNIQUE_SOURCES
     )
 
     logger.debug(
         "spike_eval cluster=%s c1=%d c10=%d b10=%.2f ratio=%.2f sev=%d sources=%d -> %s",
-        cluster_id, c1, c10, b10, ratio, severity, unique_sources, triggered,
+        cluster_id, c1, c10, b10, ratio, warmth, unique_sources, triggered,
     )
 
     if triggered:

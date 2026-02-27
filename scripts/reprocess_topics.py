@@ -25,7 +25,7 @@ from sqlalchemy import text
 from backend.app.core.database import AsyncSessionLocal
 from worker.processor.normalizer import (
     _classify_topic, _extract_geo, _make_geohash,
-    _calculate_severity, is_relevant, NormalizeResult,
+    _calculate_warmth, is_relevant, NormalizeResult,
 )
 
 FORCE_ALL = "--all" in sys.argv
@@ -60,7 +60,7 @@ async def step1_reprocess_events(db):
         new_topic = _classify_topic(combined)
         new_country, new_lat, new_lon = _extract_geo(combined)
         new_geohash = _make_geohash(new_lat, new_lon)
-        new_severity = _calculate_severity(combined, new_topic)
+        new_severity = _calculate_warmth(combined, new_topic)
 
         if (not FORCE_ALL
                 and new_topic == row.topic

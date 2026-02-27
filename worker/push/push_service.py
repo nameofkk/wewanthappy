@@ -52,7 +52,7 @@ def _is_in_quiet_hours(current: dt_time, start: dt_time, end: dt_time) -> bool:
 async def _get_target_tokens(
     country_code: Optional[str],
     notify_fast: bool,
-    kscore: float,
+    hscore: float,
     cluster_topic: Optional[str],
     db: AsyncSession,
 ) -> list[str]:
@@ -60,7 +60,7 @@ async def _get_target_tokens(
     해당 국가에 관심 설정한 사용자의 FCM 토큰 수집.
     notify_fast=True: fast 레인 (notify_fast=True 사용자)
     notify_fast=False: verified 레인 (notify_verified=True 사용자)
-    kscore: 사용자 min_kscore 이하인 경우만 발송
+    hscore: 사용자 min_kscore 이하인 경우만 발송
     cluster_topic: 사용자 topics 목록에 포함된 경우만 발송
     quiet_hours: 사용자 현지 시각이 조용한 시간이면 제외
     """
@@ -88,7 +88,7 @@ async def _get_target_tokens(
         )
         .join(UserArea, UserArea.user_id == UserPushToken.user_id)
         .join(UserPreference, UserPreference.user_id == UserPushToken.user_id)
-        .where(*area_filter, UserPreference.min_kscore <= kscore)
+        .where(*area_filter, UserPreference.min_kscore <= hscore)
     )
     rows = result.fetchall()
 
@@ -153,8 +153,8 @@ async def send_spike_alert(
     cluster_id: str,
     cluster_title: str,
     country_code: Optional[str],
-    severity: int,
-    kscore: float,
+    warmth: int,
+    hscore: float,
     is_verified: bool,
     cluster_topic: Optional[str],
     db: AsyncSession,
@@ -177,24 +177,24 @@ async def send_spike_alert(
     # Verified 레인
     if is_verified:
         tokens_v = await _get_target_tokens(
-            country_code, notify_fast=False, hscore=kscore, cluster_topic=cluster_topic, db=db
+            country_code, notify_fast=False, hscore=hscore, cluster_topic=cluster_topic, db=db
         )
         sent_verified = _send_fcm_multicast(
             tokens=tokens_v,
-            title=f"⚠️ {cluster_title}",
-            body=f"Severity {severity} · KScore {kscore:.1f} · Verified / 심각도 {severity} · 확인된 이슈",
-            data={"cluster_id": cluster_id, "lane": "verified", "warmth": str(severity), "hscore": str(kscore)},
+            title=f"💛 {cluster_title}",
+            body=f"Warmth {warmth} · HScore {hscore:.1f} · Verified / 온기 {warmth} · 확인된 이슈",
+            data={"cluster_id": cluster_id, "lane": "verified", "warmth": str(warmth), "hscore": str(hscore)},
         )
 
     # Fast 레인 (항상)
     tokens_f = await _get_target_tokens(
-        country_code, notify_fast=True, hscore=kscore, cluster_topic=cluster_topic, db=db
+        country_code, notify_fast=True, hscore=hscore, cluster_topic=cluster_topic, db=db
     )
     sent_fast = _send_fcm_multicast(
         tokens=tokens_f,
-        title=f"🚨 {cluster_title}",
-        body=f"Severity {severity} · Fast Alert / 심각도 {severity} · 빠른 알림",
-        data={"cluster_id": cluster_id, "lane": "fast", "warmth": str(severity)},
+        title=f"✨ {cluster_title}",
+        body=f"Warmth {warmth} · Fast Alert / 온기 {warmth} · 빠른 알림",
+        data={"cluster_id": cluster_id, "lane": "fast", "warmth": str(warmth)},
     )
 
     await _set_cooldown(cluster_id, redis)
@@ -214,8 +214,8 @@ async def send_verified_alert(
     cluster_id: str,
     cluster_title: str,
     country_code: Optional[str],
-    severity: int,
-    kscore: float,
+    warmth: int,
+    hscore: float,
     cluster_topic: Optional[str],
     db: AsyncSession,
     redis,
@@ -230,13 +230,13 @@ async def send_verified_alert(
         return {"status": "cooldown", "sent": 0}
 
     tokens_v = await _get_target_tokens(
-        country_code, notify_fast=False, hscore=kscore, cluster_topic=cluster_topic, db=db
+        country_code, notify_fast=False, hscore=hscore, cluster_topic=cluster_topic, db=db
     )
     sent_verified = _send_fcm_multicast(
         tokens=tokens_v,
-        title=f"⚠️ {cluster_title}",
-        body=f"Severity {severity} · KScore {kscore:.1f} · Verified / 심각도 {severity} · 확인된 이슈",
-        data={"cluster_id": cluster_id, "lane": "verified", "warmth": str(severity), "hscore": str(kscore)},
+        title=f"💛 {cluster_title}",
+        body=f"Warmth {warmth} · HScore {hscore:.1f} · Verified / 온기 {warmth} · 확인된 이슈",
+        data={"cluster_id": cluster_id, "lane": "verified", "warmth": str(warmth), "hscore": str(hscore)},
     )
 
     await redis.setex(cooldown_key, COOLDOWN_SECONDS, "1")
