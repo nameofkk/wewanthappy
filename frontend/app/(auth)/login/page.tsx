@@ -153,13 +153,10 @@ export default function LoginPage() {
     try {
       const { user, isNewUser } = await signInWithToss();
       if (!user) throw new Error("토스 로그인 실패");
-
       if (isNewUser) {
-        // 신규 유저 → 회원가입 폼으로 (Google 신규와 동일 흐름)
-        setGoogleUser(user); // googleUser state 재활용
+        setGoogleUser(user);
         setTab("google-register");
       } else {
-        // 기존 유저 → 홈으로
         localStorage.setItem("onboarding_done", "true");
         router.push("/home");
       }

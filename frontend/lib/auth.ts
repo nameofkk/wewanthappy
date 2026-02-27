@@ -81,7 +81,7 @@ export async function createEmailUser(email: string, password: string): Promise<
   return result.user;
 }
 
-// 토스 앱인토스 로그인
+// 토스 앱인토스 로그인 (Toss 앱 내에서만 동작)
 export async function signInWithToss(): Promise<{
   user: FirebaseUser | null;
   isNewUser: boolean;
@@ -92,28 +92,71 @@ export async function signInWithToss(): Promise<{
     { authorizationCode: string; referrer: string }
   >("appLogin");
 
-  // 1. 토스 네이티브 로그인 → authorizationCode 획득
-  const { authorizationCode } = await appLogin();
+  const { authorizationCode, referrer } = await appLogin();
 
-  // 2. 백엔드에서 코드 교환 → Firebase Custom Token
   const API_BASE =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
   const res = await fetch(`${API_BASE}/auth/toss-login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ authorization_code: authorizationCode }),
+    body: JSON.stringify({ authorization_code: authorizationCode, referrer }),
   });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(
-      err.detail || "토스 로그인에 실패했습니다."
-    );
+    throw new Error(err.detail || "토스 로그인에 실패했습니다.");
   }
 
   const { firebase_custom_token, is_new_user } = await res.json();
 
-  // 3. Firebase Custom Token으로 인증
+  const auth = getFirebaseAuth();
+  if (!auth) throw new Error("Firebase가 설정되지 않았습니다.");
+
+  const result = await signInWithCustomToken(auth, firebase_custom_token);
+  return { user: result.user, isNewUser: is_new_user };
+}
+
+// 토스 스토어 로그인 (웹 OAuth2 리다이렉트)
+export function startTossStoreLogin(): void {
+  const clientId = process.env.NEXT_PUBLIC_TOSS_CLIENT_ID;
+  if (!clientId) {
+    throw new Error("NEXT_PUBLIC_TOSS_CLIENT_ID가 설정되지 않았습니다.");
+  }
+  const redirectUri = `${window.location.origin}/auth/toss/callback`;
+  const state = crypto.randomUUID();
+  sessionStorage.setItem("toss_oauth_state", state);
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "user_ci",
+    state,
+    policy: "LOGIN",
+  });
+  window.location.href = `https://oauth2.cert.toss.im/authorize?${params}`;
+}
+
+// 토스 스토어 로그인 콜백 처리
+export async function completeTossStoreLogin(code: string): Promise<{
+  user: FirebaseUser | null;
+  isNewUser: boolean;
+}> {
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
+  const res = await fetch(`${API_BASE}/auth/toss-store-login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "토스 로그인에 실패했습니다.");
+  }
+
+  const { firebase_custom_token, is_new_user } = await res.json();
+
   const auth = getFirebaseAuth();
   if (!auth) throw new Error("Firebase가 설정되지 않았습니다.");
 

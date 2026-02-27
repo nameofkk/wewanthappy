@@ -91,10 +91,16 @@ class Settings(BaseSettings):
     apple_bundle_id: str = "com.wewanthappy.app"
     apple_environment: str = "Sandbox"  # "Production" when live
 
-    # 토스 앱인토스 (Toss Apps-in-Toss)
-    toss_app_secret: str = ""          # 토스 콘솔에서 발급받은 앱 시크릿
-    toss_decryption_key: str = ""      # 유저 정보 복호화 키 (AES-256-GCM)
+    # 토스 앱인토스 로그인 (mTLS)
+    toss_mtls_cert: str = ""           # mTLS 인증서 경로 (.crt/.pem)
+    toss_mtls_key: str = ""            # mTLS 개인키 경로 (.key/.pem)
+    toss_decryption_key: str = ""      # 유저 정보 복호화 키 (AES-256-GCM, Base64)
     toss_decryption_aad: str = ""      # 복호화 AAD
+
+    # 토스 스토어 로그인 (OAuth2 웹용, 추후)
+    toss_client_id: str = ""           # cert.support@toss.im 에서 발급
+    toss_client_secret: str = ""       # cert.support@toss.im 에서 발급
+    toss_redirect_uri: str = ""        # OAuth2 인가코드 수신 URI
 
 
 settings = Settings()

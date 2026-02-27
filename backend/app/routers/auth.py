@@ -102,10 +102,11 @@ def _user_to_out(u: User) -> UserOut:
     )
 
 
-# ── 토스 로그인 ─────────────────────────────────────────────────────────────
+# ── 토스 로그인 ────────────────────────────────────────────────────────────
 
 class TossLoginBody(BaseModel):
     authorization_code: str
+    referrer: str = ""
 
 
 class TossLoginOut(BaseModel):
@@ -114,108 +115,128 @@ class TossLoginOut(BaseModel):
     user_id: Optional[str] = None
 
 
-TOSS_API_BASE = "https://apps-in-toss-api.toss.im"
+# 앱인토스 API (mTLS 필수)
+TOSS_AIT_API_BASE = "https://apps-in-toss-api.toss.im/api-partner/v1/apps-in-toss/user/oauth2"
+# 스토어 로그인 (mTLS 불필요, client_id/secret 사용)
+TOSS_STORE_BASE = "https://oauth2.cert.toss.im"
 
 
-async def _exchange_toss_code(authorization_code: str) -> dict:
-    """Toss authorizationCode → accessToken 교환."""
+def _get_toss_mtls_client_kwargs() -> dict:
+    """앱인토스 API용 mTLS httpx 설정."""
+    kwargs: dict = {"timeout": 10}
+    if settings.toss_mtls_cert and settings.toss_mtls_key:
+        kwargs["cert"] = (settings.toss_mtls_cert, settings.toss_mtls_key)
+    return kwargs
+
+
+async def _exchange_toss_code_ait(authorization_code: str, referrer: str = "") -> dict:
+    """앱인토스 로그인: authorizationCode → accessToken (mTLS)."""
     import httpx
 
-    if not settings.toss_app_secret:
-        raise HTTPException(503, detail="토스 로그인이 설정되지 않았습니다. (TOSS_APP_SECRET 필요)")
+    if not settings.toss_mtls_cert or not settings.toss_mtls_key:
+        raise HTTPException(503, detail="mTLS 인증서가 설정되지 않았습니다.")
 
-    async with httpx.AsyncClient(timeout=10) as client:
+    async with httpx.AsyncClient(**_get_toss_mtls_client_kwargs()) as client:
         resp = await client.post(
-            f"{TOSS_API_BASE}/api-partner/v1/apps-in-toss/user/oauth2/generate-token",
-            json={"authorizationCode": authorization_code},
-            headers={
-                "Authorization": f"Bearer {settings.toss_app_secret}",
-                "Content-Type": "application/json",
-            },
+            f"{TOSS_AIT_API_BASE}/generate-token",
+            json={"authorizationCode": authorization_code, "referrer": referrer},
+            headers={"Content-Type": "application/json"},
         )
     if resp.status_code != 200:
         logger.error("토스 토큰 교환 실패: %s %s", resp.status_code, resp.text)
         raise HTTPException(401, detail="토스 인증에 실패했습니다.")
+
+    body = resp.json()
+    if body.get("resultType") == "FAIL":
+        err = body.get("error", {})
+        logger.error("토스 generate-token 실패: %s", err)
+        raise HTTPException(401, detail=err.get("reason", "토스 인증 실패"))
+
+    return body.get("success", body)
+
+
+async def _exchange_toss_code_store(code: str) -> dict:
+    """스토어 로그인: OAuth2 인가코드 → accessToken (client_id/secret)."""
+    import httpx
+
+    if not settings.toss_client_id or not settings.toss_client_secret:
+        raise HTTPException(503, detail="토스 스토어 로그인 미설정 (TOSS_CLIENT_ID/SECRET 필요)")
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.post(
+            f"{TOSS_STORE_BASE}/token",
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "client_id": settings.toss_client_id,
+                "client_secret": settings.toss_client_secret,
+                "redirect_uri": settings.toss_redirect_uri,
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+    if resp.status_code != 200:
+        logger.error("토스 스토어 토큰 교환 실패: %s %s", resp.status_code, resp.text)
+        raise HTTPException(401, detail="토스 인증에 실패했습니다.")
     return resp.json()
 
 
-async def _get_toss_user_key(access_token: str) -> str:
-    """Toss accessToken → userKey 조회."""
+async def _get_toss_user_info(access_token: str, use_mtls: bool = True) -> dict:
+    """accessToken → 사용자 정보 조회 (login-me)."""
     import httpx
 
-    async with httpx.AsyncClient(timeout=10) as client:
+    if use_mtls:
+        base = TOSS_AIT_API_BASE
+        kwargs = _get_toss_mtls_client_kwargs()
+    else:
+        base = f"{TOSS_STORE_BASE}/api-partner/v1/apps-in-toss/user/oauth2"
+        kwargs = {"timeout": 10}
+
+    async with httpx.AsyncClient(**kwargs) as client:
         resp = await client.get(
-            f"{TOSS_API_BASE}/api-partner/v1/apps-in-toss/user/login-me",
+            f"{base}/login-me",
             headers={"Authorization": f"Bearer {access_token}"},
         )
     if resp.status_code != 200:
         logger.error("토스 유저 정보 조회 실패: %s %s", resp.status_code, resp.text)
         raise HTTPException(401, detail="토스 유저 정보를 가져올 수 없습니다.")
 
-    data = resp.json()
+    body = resp.json()
+    if body.get("resultType") == "FAIL":
+        err = body.get("error", {})
+        logger.error("토스 login-me 실패: %s", err)
+        raise HTTPException(401, detail=err.get("reason", "토스 유저 정보 조회 실패"))
 
-    # 응답이 암호화된 경우 복호화 시도
-    if "encryptedData" in data and settings.toss_decryption_key:
-        data = _decrypt_toss_user_data(data["encryptedData"])
-
-    user_key = data.get("userKey") or data.get("user_key")
-    if not user_key:
-        logger.error("토스 응답에 userKey 없음: %s", list(data.keys()))
-        raise HTTPException(500, detail="토스 유저 식별 실패")
-    return user_key
+    return body.get("success", body)
 
 
-def _decrypt_toss_user_data(encrypted_data: str) -> dict:
-    """AES-256-GCM으로 암호화된 토스 유저 데이터 복호화."""
+def _decrypt_toss_field(encrypted_text: str) -> str:
+    """AES-256-GCM으로 암호화된 개별 필드 복호화."""
     import base64
-    import json
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
     key = base64.b64decode(settings.toss_decryption_key)
     aad = settings.toss_decryption_aad.encode() if settings.toss_decryption_aad else None
 
-    raw = base64.b64decode(encrypted_data)
-    # 첫 12바이트: nonce(IV), 나머지: ciphertext + tag
+    raw = base64.b64decode(encrypted_text)
     nonce, ciphertext = raw[:12], raw[12:]
 
     aesgcm = AESGCM(key)
     plaintext = aesgcm.decrypt(nonce, ciphertext, aad)
-    return json.loads(plaintext)
+    return plaintext.decode("utf-8")
 
 
-@router.post("/toss-login", response_model=TossLoginOut)
-async def toss_login(
-    body: TossLoginBody,
-    db: AsyncSession = Depends(get_db),
-):
-    """토스 앱인토스 로그인.
-
-    1. authorizationCode → Toss API에서 accessToken 교환
-    2. accessToken으로 userKey 조회
-    3. firebase_uid = "toss:{userKey}" 로 유저 조회/생성
-    4. Firebase Custom Token 발급 → 프론트에서 signInWithCustomToken()
-    """
-    # 1. 코드 → 토큰 교환
-    token_data = await _exchange_toss_code(body.authorization_code)
-    access_token = token_data.get("accessToken") or token_data.get("access_token")
-    if not access_token:
-        raise HTTPException(500, detail="토스 토큰 응답에 accessToken 없음")
-
-    # 2. userKey 조회
-    user_key = await _get_toss_user_key(access_token)
+async def _toss_login_common(user_key, db: AsyncSession) -> TossLoginOut:
+    """토스 userKey → Firebase Custom Token 발급 (공통 로직)."""
     firebase_uid = f"toss:{user_key}"
 
-    # 3. 유저 조회 (기존 유저인지 확인)
     result = await db.execute(select(User).where(User.firebase_uid == firebase_uid))
     existing_user = result.scalar_one_or_none()
     is_new = existing_user is None
 
     if not is_new:
-        # 기존 유저 — 활동 시간 갱신
         existing_user.last_active = datetime.now(timezone.utc)
         await db.flush()
 
-    # 4. Firebase Custom Token 발급
     try:
         import firebase_admin.auth as fb_auth
         custom_token = fb_auth.create_custom_token(firebase_uid)
@@ -230,6 +251,60 @@ async def toss_login(
         is_new_user=is_new,
         user_id=str(existing_user.id) if existing_user else None,
     )
+
+
+@router.post("/toss-login", response_model=TossLoginOut)
+async def toss_login(
+    body: TossLoginBody,
+    db: AsyncSession = Depends(get_db),
+):
+    """앱인토스 로그인 (Toss 앱 내 appLogin bridge).
+
+    1. authorizationCode → generate-token (mTLS) → accessToken
+    2. accessToken → login-me (mTLS) → userKey
+    3. firebase_uid = "toss:{userKey}" → Firebase Custom Token
+    """
+    token_data = await _exchange_toss_code_ait(body.authorization_code, body.referrer)
+    access_token = token_data.get("accessToken")
+    if not access_token:
+        raise HTTPException(500, detail="토스 토큰 응답에 accessToken 없음")
+
+    user_info = await _get_toss_user_info(access_token, use_mtls=True)
+    user_key = user_info.get("userKey")
+    if not user_key:
+        logger.error("토스 응답에 userKey 없음: %s", list(user_info.keys()))
+        raise HTTPException(500, detail="토스 유저 식별 실패")
+
+    return await _toss_login_common(user_key, db)
+
+
+class TossStoreLoginBody(BaseModel):
+    code: str  # OAuth2 인가코드
+
+
+@router.post("/toss-store-login", response_model=TossLoginOut)
+async def toss_store_login(
+    body: TossStoreLoginBody,
+    db: AsyncSession = Depends(get_db),
+):
+    """토스 스토어 로그인 (웹 OAuth2 리다이렉트).
+
+    1. code → /token (client_id/secret) → access_token
+    2. access_token → login-me → userKey
+    3. firebase_uid = "toss:{userKey}" → Firebase Custom Token
+    """
+    token_data = await _exchange_toss_code_store(body.code)
+    access_token = token_data.get("access_token")
+    if not access_token:
+        raise HTTPException(500, detail="토스 토큰 응답에 access_token 없음")
+
+    user_info = await _get_toss_user_info(access_token, use_mtls=False)
+    user_key = user_info.get("userKey")
+    if not user_key:
+        logger.error("토스 응답에 userKey 없음: %s", list(user_info.keys()))
+        raise HTTPException(500, detail="토스 유저 식별 실패")
+
+    return await _toss_login_common(user_key, db)
 
 
 # ── 엔드포인트 ────────────────────────────────────────────────────────────────

@@ -67,6 +67,8 @@ firebase-credentials.json
 *.pem
 *.key
 *.cert
+*.crt
+backend/certs/
 coverage/
 .coverage
 htmlcov/
