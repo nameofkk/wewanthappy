@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.wewanthappy.app",
+      "sha256_cert_fingerprints": [
+        "D0:61:7A:E0:68:0E:95:2D:41:1F:BC:26:B6:CE:50:74:73:BA:64:AE:2C:DA:6A:DC:06:A4:34:5E:E7:1C:3E:1D"
+      ]
+    }
+  }
+]
