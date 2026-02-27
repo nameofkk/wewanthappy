@@ -23,7 +23,7 @@ const LEVEL_COLORS: Record<number, string> = {
 interface HistoryPoint {
   time: string;
   raw_score: number;
-  tension_level: number;
+  warmth_level: number;
   percentile_30d: number;
 }
 
@@ -58,8 +58,8 @@ function CustomTooltip({
 }) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
-  const color = LEVEL_COLORS[d.tension_level] ?? "#6b7280";
-  const label = getTensionLevelLabel(d.tension_level as 0 | 1 | 2 | 3, lang);
+  const color = LEVEL_COLORS[d.warmth_level] ?? "#6b7280";
+  const label = getTensionLevelLabel(d.warmth_level as 0 | 1 | 2 | 3, lang);
   const locale = lang === "en" ? "en-US" : "ko-KR";
   const scoreUnit = t(lang, "chart_tooltip_score_unit");
   const pctLabel = t(lang, "chart_tooltip_percentile");
@@ -84,8 +84,8 @@ export function TensionHistoryChart({ data, range, lang }: TensionHistoryChartPr
     );
   }
 
-  // 가장 높은 tension_level 기준 선 색상
-  const maxLevel = Math.max(...data.map((d) => d.tension_level)) as keyof typeof LEVEL_COLORS;
+  // 가장 높은 warmth_level 기준 선 색상
+  const maxLevel = Math.max(...data.map((d) => d.warmth_level)) as keyof typeof LEVEL_COLORS;
   const lineColor = LEVEL_COLORS[maxLevel] ?? "#6b7280";
 
   return (

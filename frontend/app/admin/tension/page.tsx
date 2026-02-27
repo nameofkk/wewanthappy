@@ -14,11 +14,11 @@ import { API_BASE } from "@/lib/admin-utils";
 interface TensionRow {
   country_code: string;
   raw_score: number;
-  tension_level: number;
+  warmth_level: number;
   percentile_30d: number;
   event_score: number;
   accel_score: number;
-  spillover_score: number;
+  spread_score: number;
   updated_at: string;
 }
 
@@ -99,7 +99,7 @@ export default function AdminTensionPage() {
   const [sortBy, setSortBy] = useState<"score" | "level" | "country">("score");
   const sorted = [...(data ?? [])].sort((a, b) => {
     if (sortBy === "score") return b.raw_score - a.raw_score;
-    if (sortBy === "level") return b.tension_level - a.tension_level || b.raw_score - a.raw_score;
+    if (sortBy === "level") return b.warmth_level - a.warmth_level || b.raw_score - a.raw_score;
     return a.country_code.localeCompare(b.country_code);
   });
 
@@ -220,7 +220,7 @@ export default function AdminTensionPage() {
                   <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground">#</th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground">{t(lang, "admin_country")}</th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground">{t(lang, "admin_tension_raw_score")}</th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground">{t(lang, "admin_tension_level")}</th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground">{t(lang, "admin_warmth_level")}</th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground">{t(lang, "admin_tension_percentile")}</th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground">{lang === "ko" ? "이벤트" : "Events"}</th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground">{t(lang, "admin_accel")}</th>
@@ -230,7 +230,7 @@ export default function AdminTensionPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map((row, i) => (
-                  <tr key={row.country_code} className={cn("hover:bg-secondary/20", ROW_BG[row.tension_level])}>
+                  <tr key={row.country_code} className={cn("hover:bg-secondary/20", ROW_BG[row.warmth_level])}>
                     <td className="px-3 py-2.5 text-xs text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-2.5">
                       <span className="text-sm font-medium">
@@ -241,8 +241,8 @@ export default function AdminTensionPage() {
                       <span className="text-sm font-bold tabular-nums">{row.raw_score.toFixed(1)}</span>
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold border", LEVEL_COLORS[row.tension_level])}>
-                        {levelLabels[row.tension_level]}
+                      <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold border", LEVEL_COLORS[row.warmth_level])}>
+                        {levelLabels[row.warmth_level]}
                       </span>
                     </td>
                     <td className="px-3 py-2.5">
@@ -261,7 +261,7 @@ export default function AdminTensionPage() {
                     </td>
                     <td className="px-3 py-2.5 text-xs tabular-nums">{row.event_score.toFixed(1)}</td>
                     <td className="px-3 py-2.5 text-xs tabular-nums">{row.accel_score.toFixed(1)}</td>
-                    <td className="px-3 py-2.5 text-xs tabular-nums">{row.spillover_score.toFixed(1)}</td>
+                    <td className="px-3 py-2.5 text-xs tabular-nums">{row.spread_score.toFixed(1)}</td>
                     <td className="px-3 py-2.5 text-xs text-muted-foreground">
                       {new Date(row.updated_at).toLocaleString(locale, {
                         month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
@@ -276,19 +276,19 @@ export default function AdminTensionPage() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-3">
             {filtered.map((row, i) => (
-              <div key={row.country_code} className={cn("rounded-xl border border-border bg-card p-4", ROW_BG[row.tension_level])}>
+              <div key={row.country_code} className={cn("rounded-xl border border-border bg-card p-4", ROW_BG[row.warmth_level])}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{getFlag(row.country_code)} {getCountryName(row.country_code, lang)}</span>
-                    <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold border", LEVEL_COLORS[row.tension_level])}>
-                      {levelLabels[row.tension_level]}
+                    <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold border", LEVEL_COLORS[row.warmth_level])}>
+                      {levelLabels[row.warmth_level]}
                     </span>
                   </div>
                   <span className="text-sm font-bold tabular-nums">{row.raw_score.toFixed(1)}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground mb-2">
                   <div><span className="text-[10px]">{t(lang, "admin_accel")}</span><br/><span className="tabular-nums font-medium text-foreground">{row.accel_score.toFixed(1)}</span></div>
-                  <div><span className="text-[10px]">{t(lang, "admin_spillover")}</span><br/><span className="tabular-nums font-medium text-foreground">{row.spillover_score.toFixed(1)}</span></div>
+                  <div><span className="text-[10px]">{t(lang, "admin_spillover")}</span><br/><span className="tabular-nums font-medium text-foreground">{row.spread_score.toFixed(1)}</span></div>
                   <div><span className="text-[10px]">{t(lang, "admin_tension_percentile")}</span><br/><span className="tabular-nums font-medium text-foreground">{row.percentile_30d.toFixed(0)}%</span></div>
                 </div>
                 <div className="flex items-center gap-2">

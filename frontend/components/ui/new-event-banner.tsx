@@ -21,7 +21,7 @@ interface PeekItem {
 
 interface TensionPeekItem {
   country_code: string;
-  tension_level: number;
+  warmth_level: number;
   prev_level: number;
   raw_score: number;
   change_type: string;
@@ -127,7 +127,7 @@ export function NewEventBanner() {
       const cid = banner.data.cluster_ids?.[0];
       if (cid) markSeenCluster(cid);
     } else if (banner?.type === "tension") {
-      const key = `${banner.data.country_code}:${banner.data.prev_level}:${banner.data.tension_level}`;
+      const key = `${banner.data.country_code}:${banner.data.prev_level}:${banner.data.warmth_level}`;
       markSeenTension(key);
     }
     setVisible(false);
@@ -150,7 +150,7 @@ export function NewEventBanner() {
           const tensionData: TensionPeekItem[] = await tensionRes.json();
           const seenTensions = getSeenTensions();
           const newTension = tensionData.find((t) => {
-            const key = `${t.country_code}:${t.prev_level}:${t.tension_level}`;
+            const key = `${t.country_code}:${t.prev_level}:${t.warmth_level}`;
             return !seenTensions.has(key);
           });
           if (newTension) {
@@ -193,12 +193,12 @@ export function NewEventBanner() {
   // 긴장도 배너 렌더링
   if (banner?.type === "tension") {
     const t = banner.data;
-    const accent = TENSION_ACCENT[t.tension_level] ?? "bg-slate-500";
-    const dot = TENSION_DOT[t.tension_level] ?? "bg-slate-400";
+    const accent = TENSION_ACCENT[t.warmth_level] ?? "bg-slate-500";
+    const dot = TENSION_DOT[t.warmth_level] ?? "bg-slate-400";
     const countryName = COUNTRY_MAP[t.country_code]?.name ?? t.country_code;
     const flag = getFlag(t.country_code);
     const prevLabel = TENSION_LEVEL_LABELS[t.prev_level] ?? "?";
-    const newLabel = TENSION_LEVEL_LABELS[t.tension_level] ?? "?";
+    const newLabel = TENSION_LEVEL_LABELS[t.warmth_level] ?? "?";
 
     return (
       <div

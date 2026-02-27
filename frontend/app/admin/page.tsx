@@ -61,7 +61,7 @@ export default function AdminDashboard() {
   });
 
   const { data: tensionData } = useQuery<
-    { country_code: string; raw_score: number; tension_level: number }[]
+    { country_code: string; raw_score: number; warmth_level: number }[]
   >({
     queryKey: ["admin-tension-all"],
     queryFn: () => fetchWithToken("/admin/warmth"),
@@ -271,7 +271,7 @@ export default function AdminDashboard() {
                 />
                 <Bar dataKey="raw_score" radius={[0, 4, 4, 0]}>
                   {top10Tension.map((entry, i) => (
-                    <Cell key={i} fill={LEVEL_COLORS[entry.tension_level] ?? "#6b7280"} />
+                    <Cell key={i} fill={LEVEL_COLORS[entry.warmth_level] ?? "#6b7280"} />
                   ))}
                 </Bar>
               </BarChart>

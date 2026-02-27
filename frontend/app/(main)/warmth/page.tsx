@@ -25,12 +25,12 @@ interface ClusterSummary {
 interface TensionData {
   country_code: string;
   raw_score: number;
-  tension_level: 0 | 1 | 2 | 3;
-  tension_label: string;
+  warmth_level: 0 | 1 | 2 | 3;
+  warmth_label: string;
   percentile_30d: number;
   event_score: number;
   accel_score: number;
-  spillover_score: number;
+  spread_score: number;
   updated_at: string;
   top5_clusters: ClusterSummary[];
 }
@@ -146,10 +146,10 @@ function TensionGauge({ score, level, lang }: { score: number; level: 0 | 1 | 2 
   );
 }
 
-function ScoreBreakdown({ event_score, accel_score, spillover_score, lang }: {
+function ScoreBreakdown({ event_score, accel_score, spread_score, lang }: {
   event_score: number;
   accel_score: number;
-  spillover_score: number;
+  spread_score: number;
   lang: Lang;
 }) {
   const [filled, setFilled] = useState(false);
@@ -168,7 +168,7 @@ function ScoreBreakdown({ event_score, accel_score, spillover_score, lang }: {
       tip: t(lang, "tension_breakdown_accel_tip"),
     },
     {
-      label: t(lang, "tension_breakdown_spillover"), value: spillover_score, weight: "10%", color: "bg-purple-500",
+      label: t(lang, "tension_breakdown_spillover"), value: spread_score, weight: "10%", color: "bg-purple-500",
       tip: t(lang, "tension_breakdown_spillover_tip"),
     },
   ];
@@ -435,7 +435,7 @@ function TensionCard({ data, userPlan, index, lang }: { data: TensionData; userP
         <ScoreBreakdown
           event_score={data.event_score}
           accel_score={data.accel_score}
-          spillover_score={data.spillover_score}
+          spread_score={data.spread_score}
           lang={lang}
         />
       </div>
