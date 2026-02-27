@@ -46,9 +46,9 @@ def upgrade():
     """)
 
     op.execute("""
-        CREATE INDEX IF NOT EXISTS idx_story_clusters_last_event_at_severity
-        ON story_clusters (last_event_at DESC, severity)
-        WHERE severity >= 30
+        CREATE INDEX IF NOT EXISTS idx_story_clusters_last_event_at_warmth
+        ON story_clusters (last_event_at DESC, warmth)
+        WHERE warmth >= 30
     """)
 
     # NormalizedEvent dedup_key 유니크 제약 (H-5 TOCTOU 완화)
@@ -70,5 +70,5 @@ def downgrade():
     """)
     op.execute("DROP INDEX IF EXISTS idx_raw_events_collected_at")
     op.execute("DROP INDEX IF EXISTS idx_normalized_events_event_time_country")
-    op.execute("DROP INDEX IF EXISTS idx_story_clusters_last_event_at_severity")
+    op.execute("DROP INDEX IF EXISTS idx_story_clusters_last_event_at_warmth")
     op.execute("DROP INDEX IF EXISTS idx_normalized_events_dedup_key_unique")
