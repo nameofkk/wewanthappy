@@ -97,15 +97,11 @@ def upgrade() -> None:
         op.alter_column("story_clusters", "spike_at", new_column_name="touching_at")
 
     # spike 인덱스 → touching 인덱스
-    try:
-        op.drop_index("idx_cluster_spike", table_name="story_clusters")
-    except Exception:
-        pass
-    op.create_index(
-        "idx_cluster_touching", "story_clusters",
-        ["is_touching", "touching_at"],
-        if_not_exists=True,
-    )
+    conn.execute(sa.text("DROP INDEX IF EXISTS idx_cluster_spike"))
+    conn.execute(sa.text(
+        "CREATE INDEX IF NOT EXISTS idx_cluster_touching "
+        "ON story_clusters (is_touching, touching_at)"
+    ))
 
     # 2. user_preferences.min_severity → min_warmth (존재하면)
     result = conn.execute(sa.text(
