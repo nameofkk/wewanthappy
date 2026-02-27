@@ -13,12 +13,10 @@ git push
 - 인증: remote URL에 토큰 포함되어 있음 (별도 설정 불필요)
 - 커밋 메시지: 한국어 OK, 작업 내용 한 줄 요약
 
-## 배포 정보
-- Domain: `https://www.wewanthappy.live`
-- Backend: `https://backend-production-3af7.up.railway.app`
-- Frontend: `https://frontend-production-f0dd.up.railway.app` (커스텀 도메인: `www.wewanthappy.live`)
-- Railway project: `proud-purpose` (ID: `8c67cb03-6ad1-40ef-8cfc-47bf2954a1ed`)
-- DB: Supabase `smxitufpgfuzepldglfo` (ap-northeast-2)
+## 배포 정보 (미설정 — Railway 새 프로젝트 필요)
+- Domain: `https://www.wewanthappy.live` (DNS 미연결)
+- Railway: 새 프로젝트 생성 필요 (WeWantPeace와 완전 별개)
+- DB: 별도 Supabase/Railway PostgreSQL 인스턴스 필요
 
 ## railway.json 주의사항
 - `railway.json`은 **backend** 서비스용으로 유지 (`Dockerfile.backend`)
