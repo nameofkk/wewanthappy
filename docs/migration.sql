@@ -1,5 +1,5 @@
 -- =============================================================================
--- WeWantPeace — Combined Migration SQL
+-- WeWantHappy — Combined Migration SQL
 -- Generated from Alembic migrations 0001 through 0009
 -- Final revision: 0009
 --
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS normalized_events (
     lon              FLOAT,
     geohash5         VARCHAR(8),
     country_code     VARCHAR(4),
-    severity         SMALLINT         NOT NULL DEFAULT 0,
+    warmth           SMALLINT         NOT NULL DEFAULT 0,
     source_tier      VARCHAR(1)       NOT NULL,
     confidence       FLOAT            NOT NULL DEFAULT 0.0,
     dedup_key        VARCHAR(64)      NOT NULL,
@@ -91,8 +91,8 @@ CREATE INDEX IF NOT EXISTS idx_ne_dedup
 CREATE INDEX IF NOT EXISTS idx_ne_country
     ON normalized_events (country_code, event_time);
 
--- issue_clusters: 클러스터링된 이슈
-CREATE TABLE IF NOT EXISTS issue_clusters (
+-- story_clusters: 클러스터링된 이슈
+CREATE TABLE IF NOT EXISTS story_clusters (
     id                  UUID             PRIMARY KEY DEFAULT gen_random_uuid(),
     cluster_key         VARCHAR(512)     NOT NULL,
     geohash5            VARCHAR(8)       NOT NULL,
@@ -103,11 +103,11 @@ CREATE TABLE IF NOT EXISTS issue_clusters (
     lon                 FLOAT,
     title               TEXT             NOT NULL,
     event_count         INT              NOT NULL DEFAULT 0,
-    severity            SMALLINT         NOT NULL DEFAULT 0,
+    warmth              SMALLINT         NOT NULL DEFAULT 0,
     confidence          FLOAT            NOT NULL DEFAULT 0.0,
-    kscore              FLOAT            NOT NULL DEFAULT 0.0,
-    is_spike            BOOLEAN          NOT NULL DEFAULT false,
-    spike_at            TIMESTAMP WITH TIME ZONE,
+    hscore              FLOAT            NOT NULL DEFAULT 0.0,
+    is_touching         BOOLEAN          NOT NULL DEFAULT false,
+    touching_at         TIMESTAMP WITH TIME ZONE,
     source_tiers        TEXT[]           NOT NULL DEFAULT '{}',
     independent_sources INT              NOT NULL DEFAULT 0,
     first_event_at      TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -120,28 +120,28 @@ CREATE TABLE IF NOT EXISTS issue_clusters (
 );
 
 CREATE INDEX IF NOT EXISTS idx_cluster_geo
-    ON issue_clusters (geohash5, last_event_at);
+    ON story_clusters (geohash5, last_event_at);
 
-CREATE INDEX IF NOT EXISTS idx_cluster_spike
-    ON issue_clusters (is_spike, spike_at);
+CREATE INDEX IF NOT EXISTS idx_cluster_touching
+    ON story_clusters (is_touching, touching_at);
 
 CREATE INDEX IF NOT EXISTS idx_cluster_country
-    ON issue_clusters (country_code, last_event_at);
+    ON story_clusters (country_code, last_event_at);
 
 -- cluster_events: 클러스터 ↔ 이벤트 연결
 CREATE TABLE IF NOT EXISTS cluster_events (
-    cluster_id UUID NOT NULL REFERENCES issue_clusters(id) ON DELETE CASCADE,
+    cluster_id UUID NOT NULL REFERENCES story_clusters(id) ON DELETE CASCADE,
     event_id   UUID NOT NULL REFERENCES normalized_events(id) ON DELETE CASCADE,
     PRIMARY KEY (cluster_id, event_id)
 );
 
--- tension_index: 긴장도 지수 (TimescaleDB 하이퍼테이블)
-CREATE TABLE IF NOT EXISTS tension_index (
+-- warmth_index: 온기 지수 (TimescaleDB 하이퍼테이블)
+CREATE TABLE IF NOT EXISTS warmth_index (
     "time"          TIMESTAMP WITH TIME ZONE NOT NULL,
     country_code    VARCHAR(4)   NOT NULL,
     region_code     VARCHAR(16),
     raw_score       FLOAT        NOT NULL DEFAULT 0.0,
-    tension_level   SMALLINT     NOT NULL DEFAULT 0,
+    warmth_level    SMALLINT     NOT NULL DEFAULT 0,
     event_score     FLOAT                 DEFAULT 0.0,
     accel_score     FLOAT                 DEFAULT 0.0,
     spillover_score FLOAT                 DEFAULT 0.0,
@@ -149,14 +149,14 @@ CREATE TABLE IF NOT EXISTS tension_index (
     PRIMARY KEY ("time", country_code)
 );
 
-CREATE INDEX IF NOT EXISTS idx_ti_country
-    ON tension_index (country_code, "time");
+CREATE INDEX IF NOT EXISTS idx_wi_country
+    ON warmth_index (country_code, "time");
 
 -- TimescaleDB 하이퍼테이블 생성 (TimescaleDB 없으면 skip)
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'timescaledb') THEN
-        PERFORM create_hypertable('tension_index', 'time', if_not_exists => TRUE);
+        PERFORM create_hypertable('warmth_index', 'time', if_not_exists => TRUE);
     END IF;
 END$$;
 
@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS trending_keywords (
     id            SERIAL PRIMARY KEY,
     keyword       VARCHAR(256)             NOT NULL,
     normalized_kw VARCHAR(256)             NOT NULL,
-    kscore        FLOAT                    NOT NULL DEFAULT 0.0,
+    hscore        FLOAT                    NOT NULL DEFAULT 0.0,
     topic         VARCHAR(32),
     country_codes TEXT[]                   NOT NULL DEFAULT '{}',
     cluster_ids   UUID[]                   NOT NULL DEFAULT '{}',
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS trending_keywords (
 );
 
 CREATE INDEX IF NOT EXISTS idx_kw_scope_score
-    ON trending_keywords (scope, kscore DESC, calculated_at);
+    ON trending_keywords (scope, hscore DESC, calculated_at);
 
 -- users
 CREATE TABLE IF NOT EXISTS users (
@@ -220,8 +220,8 @@ CREATE TABLE IF NOT EXISTS user_push_tokens (
 CREATE TABLE IF NOT EXISTS user_preferences (
     user_id           UUID       PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     language          VARCHAR(8) NOT NULL DEFAULT 'ko',
-    min_severity      SMALLINT   NOT NULL DEFAULT 35,
-    topics            TEXT[]     NOT NULL DEFAULT '{conflict,terror,coup,sanctions,cyber,protest}',
+    min_warmth        SMALLINT   NOT NULL DEFAULT 35,
+    topics            TEXT[]     NOT NULL DEFAULT '{kindness,reunion,rescue,community,recovery,children,health,animals,elderly,peace}',
     quiet_hours_start TIME,
     quiet_hours_end   TIME,
     timezone          VARCHAR(64) NOT NULL DEFAULT 'Asia/Seoul'
@@ -231,19 +231,19 @@ CREATE TABLE IF NOT EXISTS user_preferences (
 -- 0002: add_title_ko
 -- =============================================================================
 
-ALTER TABLE issue_clusters
+ALTER TABLE story_clusters
     ADD COLUMN IF NOT EXISTS title_ko VARCHAR;
 
 -- =============================================================================
 -- 0003: timescaledb_retention
 -- =============================================================================
 
--- tension_index 90일 보존 정책 (TimescaleDB 있을 때만)
+-- warmth_index 90일 보존 정책 (TimescaleDB 있을 때만)
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'timescaledb') THEN
         PERFORM add_retention_policy(
-            'tension_index',
+            'warmth_index',
             INTERVAL '90 days',
             if_not_exists => true
         );
@@ -260,9 +260,9 @@ CREATE INDEX IF NOT EXISTS idx_normalized_events_event_time_country
     ON normalized_events (event_time DESC, country_code)
     WHERE is_duplicate = false;
 
-CREATE INDEX IF NOT EXISTS idx_issue_clusters_last_event_at_severity
-    ON issue_clusters (last_event_at DESC, severity)
-    WHERE severity >= 30;
+CREATE INDEX IF NOT EXISTS idx_story_clusters_last_event_at_warmth
+    ON story_clusters (last_event_at DESC, warmth)
+    WHERE warmth >= 30;
 
 -- NormalizedEvent dedup_key 유니크 제약 (TOCTOU 완화)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_normalized_events_dedup_key_unique
@@ -490,10 +490,10 @@ CREATE INDEX IF NOT EXISTS ix_user_consents_user_id ON user_consents (user_id);
 INSERT INTO term_versions (type, version, content, effective_at)
 SELECT 'terms', '1.0',
 $$제1조(목적)
-이 약관은 WeWantPeace(이하 "회사")가 제공하는 서비스의 이용조건 및 절차, 회사와 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
+이 약관은 WeWantHappy(이하 "회사")가 제공하는 서비스의 이용조건 및 절차, 회사와 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
 
 제2조(정의)
-① "서비스"란 회사가 제공하는 세계정세 알림·지도·커뮤니티 플랫폼을 말합니다.
+① "서비스"란 회사가 제공하는 따뜻한 이야기 뉴스·온기 지수·커뮤니티 플랫폼을 말합니다.
 ② "회원"이란 본 약관에 동의하고 서비스를 이용하는 자를 말합니다.
 ③ "Pro 회원"이란 유료 구독을 통해 추가 기능을 이용하는 회원을 말합니다.
 ④ "콘텐츠"란 회원이 서비스 내에서 작성·게시한 게시물, 댓글 등을 말합니다.
@@ -552,7 +552,7 @@ INSERT INTO term_versions (type, version, content, effective_at)
 SELECT 'privacy', '1.0',
 $$개인정보처리방침
 
-WeWantPeace(이하 "회사")는 개인정보보호법, 정보통신망 이용촉진 및 정보보호 등에 관한 법률을 준수합니다.
+WeWantHappy(이하 "회사")는 개인정보보호법, 정보통신망 이용촉진 및 정보보호 등에 관한 법률을 준수합니다.
 
 1. 수집하는 개인정보 항목
 [필수] 이메일 주소, 닉네임, 생년도, 소셜로그인 식별자(Google UID 등)
@@ -579,7 +579,7 @@ WeWantPeace(이하 "회사")는 개인정보보호법, 정보통신망 이용촉
 - 법령에 따른 수사기관 요청 시 제공 가능
 
 5. 개인정보 처리 위탁
-- 클라우드 인프라: Fly.io (서버 운영)
+- 클라우드 인프라: Railway (서버 운영)
 - 위탁 업무 외 개인정보 처리 금지 계약 체결
 
 6. 이용자 권리 행사 방법
@@ -600,7 +600,7 @@ WeWantPeace(이하 "회사")는 개인정보보호법, 정보통신망 이용촉
 - 정기적 보안 점검
 
 9. 개인정보 보호책임자
-성명: WeWantPeace 개인정보 보호담당자
+성명: WeWantHappy 개인정보 보호담당자
 이메일: krshin7@naver.com
 연락처: krshin7@naver.com
 
@@ -621,10 +621,10 @@ ALTER TABLE posts ADD COLUMN IF NOT EXISTS dislike_count INT NOT NULL DEFAULT 0;
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS images JSONB;
 
 -- =============================================================================
--- 0009: user_preferences_kscore
+-- 0009: user_preferences_hscore
 -- =============================================================================
 
-ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS min_kscore FLOAT NOT NULL DEFAULT 1.0;
+ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS min_hscore FLOAT NOT NULL DEFAULT 1.0;
 
 -- =============================================================================
 -- alembic_version: 최종 리비전 기록

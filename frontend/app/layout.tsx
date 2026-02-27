@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     default: "WeWantHappy",
     template: "%s | WeWantHappy",
   },
-  description: "실시간 세계정세 모니터링 · 긴장도 지수 · 이슈 알림",
+  description: "따뜻한 세상 이야기 · 온기 지수 · 감동 알림",
   manifest: "/manifest.json",
   metadataBase: new URL(SITE_URL),
   openGraph: {
@@ -18,14 +18,14 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     url: SITE_URL,
     siteName: "WeWantHappy",
-    title: "WeWantHappy — 세계정세 모니터링",
-    description: "긴장도 지수 · 이슈 알림 · 실시간 지도",
+    title: "WeWantHappy — 따뜻한 세상 이야기",
+    description: "온기 지수 · 감동 알림 · 실시간 지도",
     // images는 app/opengraph-image.png 파일 기반 메타데이터가 자동 적용됨
   },
   twitter: {
     card: "summary_large_image",
-    title: "WeWantHappy — 세계정세 모니터링",
-    description: "긴장도 지수 · 이슈 알림 · 실시간 지도",
+    title: "WeWantHappy — 따뜻한 세상 이야기",
+    description: "온기 지수 · 감동 알림 · 실시간 지도",
     // images는 app/twitter-image.png 파일 기반 메타데이터가 자동 적용됨
   },
   appleWebApp: {
@@ -73,13 +73,13 @@ export default function RootLayout({
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            background: "#0f1729",
+            background: "linear-gradient(135deg, #FFF8F0 0%, #FBF0D9 50%, #FFF8F0 100%)",
           }}
         >
-          {/* 레이더 파동 + 로고 */}
+          {/* 따뜻한 파동 + 로고 */}
           <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 184, height: 80 }}>
-            <div className="splash-breathe" style={{ position: "absolute", top: "50%", left: "50%", width: 40, height: 40, borderRadius: "50%", border: "1px solid rgba(59,130,246,0.2)", transform: "translate(-50%,-50%)", animation: "splash-radar 3s ease-out infinite" }} />
-            <div style={{ position: "absolute", top: "50%", left: "50%", width: 40, height: 40, borderRadius: "50%", border: "1px solid rgba(59,130,246,0.15)", transform: "translate(-50%,-50%)", animation: "splash-radar 3s ease-out 1.5s infinite" }} />
+            <div className="splash-breathe" style={{ position: "absolute", top: "50%", left: "50%", width: 40, height: 40, borderRadius: "50%", border: "1px solid rgba(232,132,106,0.25)", transform: "translate(-50%,-50%)", animation: "splash-radar 3s ease-out infinite" }} />
+            <div style={{ position: "absolute", top: "50%", left: "50%", width: 40, height: 40, borderRadius: "50%", border: "1px solid rgba(242,182,59,0.2)", transform: "translate(-50%,-50%)", animation: "splash-radar 3s ease-out 1.5s infinite" }} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo-eye.png"
@@ -101,7 +101,7 @@ export default function RootLayout({
               fontSize: 20,
               fontWeight: 900,
               letterSpacing: "-0.025em",
-              color: "hsl(210 40% 98%)",
+              color: "#3d2b1f",
             }}
           >
             WeWantHappy

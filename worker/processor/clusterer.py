@@ -42,17 +42,17 @@ def _title_overlap(title_a: str, title_b: str) -> float:
 # ── 클러스터 제목 생성 ────────────────────────────────────────────────────────
 
 _TOPIC_LABELS_KO: dict[str, str] = {
-    "conflict":  "무장 충돌",
-    "terror":    "폭력·테러",
-    "coup":      "정변·쿠데타",
-    "sanctions": "경제 제재",
-    "cyber":     "사이버 공격",
-    "protest":   "시위·집회",
-    "diplomacy": "외교",
-    "maritime":  "해상 분쟁",
-    "disaster":  "재난·재해",
-    "health":    "감염병·보건",
-    "unknown":   "이슈",
+    "kindness":   "선행·친절",
+    "reunion":    "재회·화해",
+    "rescue":     "구조·영웅",
+    "community":  "연대·나눔",
+    "recovery":   "회복·극복",
+    "children":   "아이·교육",
+    "health":     "건강·치유",
+    "animals":    "동물·반려",
+    "elderly":    "어르신·세대",
+    "peace":      "평화·공존",
+    "unknown":    "따뜻한 이야기",
 }
 
 _COUNTRY_NAMES_KO: dict[str, str] = {
