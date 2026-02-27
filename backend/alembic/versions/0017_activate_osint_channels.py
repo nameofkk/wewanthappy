@@ -17,53 +17,8 @@ down_revision: Union[str, None] = "0016"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-OSINT_CHANNELS = [
-    {
-        "username": "IntelSlava",
-        "display_name": "Intel Slava Z",
-        "tier": "C",
-        "base_confidence": 0.55,
-        "language": "ru",
-        "topics": ["conflict", "military"],
-        "geo_focus": ["UA", "RU"],
-    },
-    {
-        "username": "OSINTdefender",
-        "display_name": "OSINT Defender",
-        "tier": "B",
-        "base_confidence": 0.70,
-        "language": "en",
-        "topics": ["conflict", "cyber", "terror"],
-        "geo_focus": [],
-    },
-    {
-        "username": "GeoConfirmed",
-        "display_name": "GeoConfirmed",
-        "tier": "B",
-        "base_confidence": 0.72,
-        "language": "en",
-        "topics": ["conflict", "military"],
-        "geo_focus": [],
-    },
-    {
-        "username": "warmonitor1",
-        "display_name": "War Monitor",
-        "tier": "C",
-        "base_confidence": 0.58,
-        "language": "en",
-        "topics": ["conflict", "military"],
-        "geo_focus": [],
-    },
-    {
-        "username": "hacktivist1",
-        "display_name": "Cyber Monitor",
-        "tier": "C",
-        "base_confidence": 0.55,
-        "language": "en",
-        "topics": ["cyber"],
-        "geo_focus": [],
-    },
-]
+# WeWantHappy에서는 OSINT 채널 불사용 — 빈 배열로 no-op 처리
+OSINT_CHANNELS = []
 
 
 def upgrade() -> None:

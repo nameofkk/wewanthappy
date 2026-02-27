@@ -162,7 +162,7 @@ def upgrade() -> None:
         sa.Column("confidence", sa.Float(), nullable=False, server_default="0.0"),
         sa.Column("hscore", sa.Float(), nullable=False, server_default="0.0"),
         sa.Column("is_touching", sa.Boolean(), nullable=False, server_default="false"),
-        sa.Column("spike_at", sa.TIMESTAMP(timezone=True), nullable=True),
+        sa.Column("touching_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column(
             "source_tiers",
             postgresql.ARRAY(sa.Text()),
@@ -189,7 +189,7 @@ def upgrade() -> None:
         ),
     )
     op.create_index("idx_cluster_geo", "story_clusters", ["geohash5", "last_event_at"])
-    op.create_index("idx_cluster_spike", "story_clusters", ["is_touching", "spike_at"])
+    op.create_index("idx_cluster_touching", "story_clusters", ["is_touching", "touching_at"])
     op.create_index("idx_cluster_country", "story_clusters", ["country_code", "last_event_at"])
 
     # cluster_events: 클러스터 ↔ 이벤트 연결
@@ -361,12 +361,12 @@ def upgrade() -> None:
             primary_key=True,
         ),
         sa.Column("language", sa.String(8), nullable=False, server_default="ko"),
-        sa.Column("min_severity", sa.SmallInteger(), nullable=False, server_default="35"),
+        sa.Column("min_warmth", sa.SmallInteger(), nullable=False, server_default="35"),
         sa.Column(
             "topics",
             postgresql.ARRAY(sa.Text()),
             nullable=False,
-            server_default=sa.text("'{conflict,terror,coup,sanctions,cyber,protest}'"),
+            server_default=sa.text("'{kindness,reunion,rescue,community,recovery,children,health,animals,elderly,peace}'"),
         ),
         sa.Column("quiet_hours_start", sa.Time(), nullable=True),
         sa.Column("quiet_hours_end", sa.Time(), nullable=True),

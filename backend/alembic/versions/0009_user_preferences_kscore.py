@@ -1,4 +1,4 @@
-"""user_preferences: min_kscore 컬럼 추가
+"""user_preferences: min_hscore 컬럼 추가
 
 Revision ID: 0009
 Revises: 0008
@@ -16,9 +16,9 @@ depends_on = None
 def upgrade() -> None:
     op.add_column(
         "user_preferences",
-        sa.Column("min_kscore", sa.Float(), nullable=False, server_default="1.0"),
+        sa.Column("min_hscore", sa.Float(), nullable=False, server_default="1.0"),
     )
 
 
 def downgrade() -> None:
-    op.drop_column("user_preferences", "min_kscore")
+    op.drop_column("user_preferences", "min_hscore")
