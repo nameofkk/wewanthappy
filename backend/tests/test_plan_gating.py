@@ -77,46 +77,46 @@ def test_plan_order():
 
 @pytest.mark.asyncio
 async def test_free_user_blocked_from_pro_endpoint(test_db):
-    """Free 유저 → /tension/country/UA/history?range=30d → 403."""
+    """Free 유저 → /warmth/country/UA/history?range=30d → 403."""
     user = await _make_user(test_db, "free")
     async with _client_with_user(test_db, user) as c:
-        resp = await c.get("/tension/country/UA/history?range=30d")
+        resp = await c.get("/warmth/country/UA/history?range=30d")
     assert resp.status_code == 403
     assert resp.json()["detail"]["code"] == "PLAN_REQUIRED"
 
 
 @pytest.mark.asyncio
 async def test_free_user_allowed_7d(test_db):
-    """Free 유저 → /tension/country/UA/history?range=7d → 200 (빈 리스트)."""
+    """Free 유저 → /warmth/country/UA/history?range=7d → 200 (빈 리스트)."""
     user = await _make_user(test_db, "free")
     async with _client_with_user(test_db, user) as c:
-        resp = await c.get("/tension/country/UA/history?range=7d")
+        resp = await c.get("/warmth/country/UA/history?range=7d")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
 
 @pytest.mark.asyncio
 async def test_pro_user_allowed_30d(test_db):
-    """Pro 유저 → /tension/country/UA/history?range=30d → 200."""
+    """Pro 유저 → /warmth/country/UA/history?range=30d → 200."""
     user = await _make_user(test_db, "pro")
     async with _client_with_user(test_db, user) as c:
-        resp = await c.get("/tension/country/UA/history?range=30d")
+        resp = await c.get("/warmth/country/UA/history?range=30d")
     assert resp.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_pro_user_blocked_from_90d(test_db):
-    """Pro 유저 → /tension/country/UA/history?range=90d → 403 (Pro+ 필요)."""
+    """Pro 유저 → /warmth/country/UA/history?range=90d → 403 (Pro+ 필요)."""
     user = await _make_user(test_db, "pro")
     async with _client_with_user(test_db, user) as c:
-        resp = await c.get("/tension/country/UA/history?range=90d")
+        resp = await c.get("/warmth/country/UA/history?range=90d")
     assert resp.status_code == 403
 
 
 @pytest.mark.asyncio
 async def test_pro_plus_allowed_90d(test_db):
-    """Pro+ 유저 → /tension/country/UA/history?range=90d → 200."""
+    """Pro+ 유저 → /warmth/country/UA/history?range=90d → 200."""
     user = await _make_user(test_db, "pro_plus")
     async with _client_with_user(test_db, user) as c:
-        resp = await c.get("/tension/country/UA/history?range=90d")
+        resp = await c.get("/warmth/country/UA/history?range=90d")
     assert resp.status_code == 200

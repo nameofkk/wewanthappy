@@ -88,7 +88,7 @@ async def _get_target_tokens(
         )
         .join(UserArea, UserArea.user_id == UserPushToken.user_id)
         .join(UserPreference, UserPreference.user_id == UserPushToken.user_id)
-        .where(*area_filter, UserPreference.min_kscore <= hscore)
+        .where(*area_filter, UserPreference.min_hscore <= hscore)
     )
     rows = result.fetchall()
 

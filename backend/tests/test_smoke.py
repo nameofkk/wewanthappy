@@ -96,45 +96,45 @@ async def test_smoke_trending_global_schema(client):
         assert "warmth" in item
 
 
-# ── /issues ───────────────────────────────────────────────────────────────────
+# ── /stories ──────────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_smoke_issues_list(client):
-    """/issues → 200, list 반환."""
-    resp = await client.get("/issues")
+async def test_smoke_stories_list(client):
+    """/stories → 200, list 반환."""
+    resp = await client.get("/stories")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
 
 @pytest.mark.asyncio
-async def test_smoke_issues_with_filters(client):
-    """/issues?topic=conflict&severity_min=30 → 200."""
-    resp = await client.get("/issues?topic=conflict&severity_min=30")
+async def test_smoke_stories_with_filters(client):
+    """/stories?topic=kindness&warmth_min=30 → 200."""
+    resp = await client.get("/stories?topic=kindness&warmth_min=30")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
 
 @pytest.mark.asyncio
-async def test_smoke_issue_not_found(client):
-    """/issues/{invalid_id} → 404."""
-    resp = await client.get("/issues/00000000-0000-0000-0000-000000000000")
+async def test_smoke_story_not_found(client):
+    """/stories/{invalid_id} → 404."""
+    resp = await client.get("/stories/00000000-0000-0000-0000-000000000000")
     assert resp.status_code == 404
 
 
-# ── /tension ─────────────────────────────────────────────────────────────────
+# ── /warmth ──────────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_smoke_tension_history_unauthenticated(client):
-    """/tension/country/UA/history → 200 (비로그인, 7d 허용)."""
-    resp = await client.get("/tension/country/UA/history?range=7d")
+async def test_smoke_warmth_history_unauthenticated(client):
+    """/warmth/country/UA/history → 200 (비로그인, 7d 허용)."""
+    resp = await client.get("/warmth/country/UA/history?range=7d")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
 
 @pytest.mark.asyncio
-async def test_smoke_tension_history_30d_requires_auth(client):
-    """/tension/country/UA/history?range=30d → 403 (비로그인)."""
-    resp = await client.get("/tension/country/UA/history?range=30d")
+async def test_smoke_warmth_history_30d_requires_auth(client):
+    """/warmth/country/UA/history?range=30d → 403 (비로그인)."""
+    resp = await client.get("/warmth/country/UA/history?range=30d")
     assert resp.status_code == 403
     assert resp.json()["detail"]["code"] == "PLAN_REQUIRED"
 

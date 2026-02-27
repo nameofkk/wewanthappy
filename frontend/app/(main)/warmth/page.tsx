@@ -7,7 +7,7 @@ import { cn, WARMTH_LEVELS } from "@/lib/utils";
 import { useTensionMine, useTensionHistory, useMe } from "@/lib/api";
 import { useAppStore } from "@/lib/store";
 import { t, getTensionLevelLabel, type Lang } from "@/lib/i18n";
-import { TensionHistoryChart } from "@/components/warmth/TensionHistoryChart";
+import { TensionHistoryChart } from "@/components/tension/TensionHistoryChart";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { LogoIcon } from "@/components/ui/logo-icon";
 import { ALL_MONITORED_COUNTRIES, COUNTRY_MAP, getCountryName, getFlag } from "@/lib/countries";

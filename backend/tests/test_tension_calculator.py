@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import AsyncMock, patch
 
 from worker.processor.warmth_calculator import (
-    _tension_level,
+    _warmth_level,
     _calc_event_score,
     _calc_accel_score,
     _calc_spillover,
@@ -16,22 +16,22 @@ from worker.processor.warmth_calculator import (
 
 # ── tension_level 분류 ────────────────────────────────────────────────────────
 
-class TestTensionLevel:
+class TestWarmthLevel:
     def test_stable(self):
-        assert _tension_level(0) == 0
-        assert _tension_level(24) == 0
+        assert _warmth_level(0) == 0
+        assert _warmth_level(24) == 0
 
     def test_caution(self):
-        assert _tension_level(25) == 1
-        assert _tension_level(49) == 1
+        assert _warmth_level(25) == 1
+        assert _warmth_level(49) == 1
 
     def test_alert(self):
-        assert _tension_level(50) == 2
-        assert _tension_level(74) == 2
+        assert _warmth_level(50) == 2
+        assert _warmth_level(74) == 2
 
     def test_crisis(self):
-        assert _tension_level(75) == 3
-        assert _tension_level(100) == 3
+        assert _warmth_level(75) == 3
+        assert _warmth_level(100) == 3
 
 
 # ── event_score ───────────────────────────────────────────────────────────────

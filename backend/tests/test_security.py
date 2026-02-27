@@ -67,7 +67,7 @@ async def test_sqli_in_issue_id(anon_client):
         "' UNION SELECT * FROM users--",
     ]
     for payload in payloads:
-        resp = await anon_client.get(f"/issues/{payload}")
+        resp = await anon_client.get(f"/stories/{payload}")
         assert resp.status_code in (422, 404, 400), (
             f"SQLi payload '{payload}' → {resp.status_code} (500이면 취약)"
         )
@@ -76,7 +76,7 @@ async def test_sqli_in_issue_id(anon_client):
 @pytest.mark.asyncio
 async def test_sqli_in_bbox_param(anon_client):
     """bbox 쿼리 파라미터에 SQL 인젝션 시도 → 500 아님."""
-    resp = await anon_client.get("/issues?bbox=1' OR 1=1--")
+    resp = await anon_client.get("/stories?bbox=1' OR 1=1--")
     # SQLAlchemy 파라미터화 쿼리 → 인젝션 방어, 정상 응답 또는 유효성 오류
     assert resp.status_code in (200, 422, 400)
     assert resp.status_code != 500
@@ -85,7 +85,7 @@ async def test_sqli_in_bbox_param(anon_client):
 @pytest.mark.asyncio
 async def test_sqli_in_country_code(anon_client):
     """국가 코드에 인젝션 → 정상 에러 또는 빈 목록 (500 아님)."""
-    resp = await anon_client.get("/tension/country/UA' OR '1'='1/history")
+    resp = await anon_client.get("/warmth/country/UA' OR '1'='1/history")
     # SQLAlchemy 파라미터화로 인젝션 방어 → 빈 목록(200) 또는 검증 오류
     assert resp.status_code in (200, 404, 422, 400)
     assert resp.status_code != 500
@@ -96,7 +96,7 @@ async def test_sqli_in_country_code(anon_client):
 @pytest.mark.asyncio
 async def test_xss_in_query_param_not_reflected_raw(anon_client):
     """XSS 페이로드가 Content-Type: application/json으로만 반환되는지 확인."""
-    resp = await anon_client.get('/issues?topic=<script>alert(1)</script>')
+    resp = await anon_client.get('/stories?topic=<script>alert(1)</script>')
     ct = resp.headers.get("content-type", "")
     assert "application/json" in ct or resp.status_code in (422, 400)
 
@@ -104,7 +104,7 @@ async def test_xss_in_query_param_not_reflected_raw(anon_client):
 @pytest.mark.asyncio
 async def test_api_response_content_type_is_json(anon_client):
     """모든 API 응답이 application/json인지 확인 (HTML 오류 페이지 반환 금지)."""
-    for path in ["/health", "/trending/global", "/issues"]:
+    for path in ["/health", "/trending/global", "/stories"]:
         resp = await anon_client.get(path)
         ct = resp.headers.get("content-type", "")
         assert "application/json" in ct, f"{path} → Content-Type: {ct}"
@@ -115,7 +115,7 @@ async def test_api_response_content_type_is_json(anon_client):
 @pytest.mark.asyncio
 async def test_sensitive_endpoints_require_auth(anon_client):
     """인증이 필요한 엔드포인트 목록 → 401."""
-    # /tension/mine 은 비로그인도 기본 8개국 반환 (공개 설계)
+    # /warmth/mine 은 비로그인도 기본 8개국 반환 (공개 설계)
     protected = [
         "/me",
         "/me/areas",

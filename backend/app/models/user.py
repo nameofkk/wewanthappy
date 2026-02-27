@@ -125,13 +125,13 @@ class UserPreference(Base):
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
     language: Mapped[str] = mapped_column(String(8), nullable=False, default="ko")
-    min_severity: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=35)
+    min_warmth: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=35)
     topics: Mapped[list[str]] = mapped_column(
         StringArray,
         nullable=False,
-        default=lambda: ["conflict", "terror", "coup", "sanctions", "cyber", "protest"],
+        default=lambda: ["kindness", "reunion", "rescue", "community", "recovery", "children", "health", "animals", "elderly", "peace"],
     )
     quiet_hours_start: Mapped[time | None] = mapped_column(Time, nullable=True)
     quiet_hours_end: Mapped[time | None] = mapped_column(Time, nullable=True)
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="Asia/Seoul")
-    min_kscore: Mapped[float] = mapped_column(nullable=False, default=3.0)
+    min_hscore: Mapped[float] = mapped_column(nullable=False, default=3.0)

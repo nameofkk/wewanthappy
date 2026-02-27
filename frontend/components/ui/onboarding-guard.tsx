@@ -49,6 +49,15 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, [checked, authLoading]);
 
+  // 안전장치: auth 로딩이 3초 이상 걸리면 강제 해제
+  useEffect(() => {
+    const failsafe = setTimeout(() => {
+      if (splashVisible) setSplashVisible(false);
+    }, 3000);
+    return () => clearTimeout(failsafe);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <SplashScreen visible={splashVisible} />

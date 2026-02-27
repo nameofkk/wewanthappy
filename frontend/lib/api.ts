@@ -61,9 +61,9 @@ export function useKScoreHistory(
   days: number = 7
 ) {
   return useQuery({
-    queryKey: ["kscore-history", clusterId, days],
+    queryKey: ["hscore-history", clusterId, days],
     queryFn: () =>
-      apiFetch<KScoreHistoryPoint[]>(`/trending/kscore-history/${clusterId}`, {
+      apiFetch<KScoreHistoryPoint[]>(`/trending/hscore-history/${clusterId}`, {
         days: String(days),
       }),
     enabled: !!clusterId,
@@ -119,7 +119,7 @@ export function useTensionMine(countries?: string[] | null) {
 export interface TensionHistoryPoint {
   time: string;
   raw_score: number;
-  tension_level: number;
+  warmth_level: number;
   percentile_30d: number;
 }
 

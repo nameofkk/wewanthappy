@@ -25,7 +25,7 @@ class NormalizedEvent(Base):
     lon: Mapped[float | None] = mapped_column(Float, nullable=True)
     geohash5: Mapped[str | None] = mapped_column(String(8), nullable=True)
     country_code: Mapped[str | None] = mapped_column(String(4), nullable=True)
-    severity: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    warmth: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
     source_tier: Mapped[str] = mapped_column(String(1), nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     dedup_key: Mapped[str] = mapped_column(String(64), nullable=False)

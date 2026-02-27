@@ -238,7 +238,7 @@ class TestUserAreaConstraints:
         await db.flush()
 
         assert prefs.language == "ko"
-        assert prefs.min_severity == 35
+        assert prefs.min_warmth == 35
         assert prefs.timezone == "Asia/Seoul"
 
     @pytest.mark.asyncio

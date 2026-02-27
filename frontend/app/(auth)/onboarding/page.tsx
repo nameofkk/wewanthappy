@@ -19,24 +19,24 @@ const APP_STORE_URL = "https://apps.apple.com/app/wewanthappy/id0000000000"; // 
 
 /** 실시간 스캔 로그 */
 const SCAN_KO = [
-  "분쟁 이벤트 3건 감지 — 중동",
-  "긴장도 지수 업데이트 — 동유럽",
-  "뉴스 수집 완료 — 85개 소스",
-  "이슈 클러스터 생성 — 동아시아",
-  "K-Score 재계산 — 47개국",
-  "확인 완료: AP·Reuters 교차검증",
-  "시위 이슈 감지 — 남미",
-  "해양 분쟁 모니터링 — 남중국해",
+  "선행 사례 3건 감지 — 유럽",
+  "온기 지수 업데이트 — 동아시아",
+  "따뜻한 뉴스 수집 완료 — 19개 소스",
+  "감동 클러스터 생성 — 북미",
+  "H-Score 재계산 — 47개국",
+  "검증 완료: AP·Reuters 교차검증",
+  "구조 영웅 이야기 감지 — 남미",
+  "커뮤니티 나눔 모니터링 — 아프리카",
 ];
 const SCAN_EN = [
-  "3 conflict events — Middle East",
-  "Tension index updated — E. Europe",
-  "News collected — 85 sources",
-  "Issue cluster created — East Asia",
-  "K-Score recalculated — 47 countries",
+  "3 kindness stories — Europe",
+  "Warmth index updated — East Asia",
+  "Warm news collected — 19 sources",
+  "Touching cluster created — N. America",
+  "H-Score recalculated — 47 countries",
   "Verified: AP·Reuters cross-check",
-  "Protest detected — South America",
-  "Maritime dispute — South China Sea",
+  "Rescue hero story — South America",
+  "Community sharing — Africa",
 ];
 
 export default function OnboardingPage() {
@@ -99,7 +99,7 @@ export default function OnboardingPage() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59,130,246,0.12) 0%, transparent 60%)",
+            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(232,132,106,0.12) 0%, transparent 60%)",
         }}
       />
 
@@ -143,8 +143,8 @@ export default function OnboardingPage() {
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground max-w-[260px] whitespace-pre-line"
             style={{ animation: "fadeSlideUp 0.5s ease-out 0.15s both" }}>
             {lang === "ko"
-              ? "전세계 분쟁·긴장 이슈를 실시간 수집·분석해\n검증된 중요 소식만 전달합니다"
-              : "Real-time collection & analysis of global conflicts\nOnly verified alerts delivered"}
+              ? "전세계 따뜻한 이야기를 실시간 수집·분석해\n검증된 감동 소식만 전달합니다"
+              : "Real-time collection & analysis of heartwarming stories\nOnly verified touching moments delivered"}
           </p>
         </div>
 
@@ -169,7 +169,7 @@ export default function OnboardingPage() {
                     opacity: i === 0 ? 1 : 0.4,
                   }}
                 >
-                  <Radio className="h-2.5 w-2.5 mt-[3px] flex-shrink-0 text-blue-400" />
+                  <Radio className="h-2.5 w-2.5 mt-[3px] flex-shrink-0 text-amber-400" />
                   <span className="text-[10px] leading-tight text-muted-foreground font-mono">{line}</span>
                 </div>
               ))}
@@ -280,7 +280,7 @@ export default function OnboardingPage() {
           top: 50%; left: 50%;
           width: 80px; height: 80px;
           border-radius: 50%;
-          border: 1px solid rgba(59,130,246,0.2);
+          border: 1px solid rgba(232,132,106,0.2);
           transform: translate(-50%,-50%) scale(0.5);
           animation: radarPulse 3.5s ease-out infinite;
           pointer-events: none;

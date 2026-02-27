@@ -1,16 +1,16 @@
 """
-기존 normalized_events의 topic/country_code/severity/geo를 소급 재처리.
+기존 normalized_events의 topic/country_code/warmth/geo를 소급 재처리.
 
 사용 시점:
-  normalizer.py의 COUNTRY_MAP, TOPIC_KEYWORDS, severity 설정이 변경되면
+  normalizer.py의 COUNTRY_MAP, TOPIC_KEYWORDS, warmth 설정이 변경되면
   반드시 이 스크립트를 실행해 기존 DB 데이터에 반영한다.
 
 처리 순서:
-  1. normalized_events 재분류 (topic / country_code / lat/lon / severity)
+  1. normalized_events 재분류 (topic / country_code / lat/lon / warmth)
   2. story_clusters geo 동기화 (country_code / lat / lon / geohash5)
-  3. story_clusters topic/severity 동기화 (이벤트 최대 severity 반영)
+  3. story_clusters topic/warmth 동기화 (이벤트 최대 warmth 반영)
   4. 카니발·축제 등 노이즈 클러스터 비활성화
-     (severity < 20 AND topic = 'unknown' → 검색에서 제외되도록 warmth=0으로 설정)
+     (warmth < 20 AND topic = 'unknown' → 검색에서 제외되도록 warmth=0으로 설정)
 
 실행:
   python3 scripts/reprocess_topics.py           # 변경된 것만 처리
@@ -35,13 +35,13 @@ async def step1_reprocess_events(db):
     """normalized_events 재분류."""
     if FORCE_ALL:
         r = await db.execute(text("""
-            SELECT id, topic, country_code, body, title, source_tier, severity
+            SELECT id, topic, country_code, body, title, source_tier, warmth
             FROM normalized_events
             ORDER BY id
         """))
     else:
         r = await db.execute(text("""
-            SELECT id, topic, country_code, body, title, source_tier, severity
+            SELECT id, topic, country_code, body, title, source_tier, warmth
             FROM normalized_events
             WHERE topic = 'unknown' OR country_code IS NULL
             ORDER BY id
@@ -78,7 +78,7 @@ async def step1_reprocess_events(db):
                 lat = :lat,
                 lon = :lon,
                 geohash5 = :gh,
-                severity = :sev
+                warmth = :sev
             WHERE id = :id
         """), {
             "topic": new_topic,
@@ -173,25 +173,25 @@ async def step2b_sync_cluster_topic(db):
     print(f"  topic 동기화: {updated}개 클러스터\n")
 
 
-async def step3_sync_cluster_severity(db):
-    """story_clusters: 연결 이벤트의 최대 severity로 업데이트."""
-    print("[Step 3] 클러스터 severity 동기화")
+async def step3_sync_cluster_warmth(db):
+    """story_clusters: 연결 이벤트의 최대 warmth로 업데이트."""
+    print("[Step 3] 클러스터 warmth 동기화")
     result = await db.execute(text("""
         UPDATE story_clusters c
-        SET severity = sub.max_sev
+        SET warmth = sub.max_warmth
         FROM (
-            SELECT ce.cluster_id, MAX(ne.warmth) AS max_sev
+            SELECT ce.cluster_id, MAX(ne.warmth) AS max_warmth
             FROM cluster_events ce
             JOIN normalized_events ne ON ne.id = ce.event_id
             GROUP BY ce.cluster_id
         ) sub
         WHERE c.id = sub.cluster_id
-          AND c.warmth != sub.max_sev
+          AND c.warmth != sub.max_warmth
         RETURNING c.id
     """))
     updated = len(result.fetchall())
     await db.commit()
-    print(f"  severity 동기화: {updated}개 클러스터\n")
+    print(f"  warmth 동기화: {updated}개 클러스터\n")
 
 
 async def step3b_fix_empty_clusters(db):
@@ -220,7 +220,7 @@ async def step3b_fix_empty_clusters(db):
 async def step4_remove_noise_events_from_clusters(db):
     """
     클러스터에서 노이즈 이벤트 제거.
-    재분류 결과 topic='unknown' AND severity <= 25가 된 이벤트는
+    재분류 결과 topic='unknown' AND warmth <= 25가 된 이벤트는
     실제 이슈 클러스터에 섞여있으면 타임라인을 오염시키므로 cluster_events에서 제거.
     """
     print("[Step 4] 클러스터에서 노이즈 이벤트 제거")
@@ -274,13 +274,13 @@ async def step4_remove_noise_events_from_clusters(db):
 async def step5_deactivate_noise_clusters(db):
     """
     노이즈 클러스터 비활성화.
-    event_count=0이거나 severity < 20 AND topic='unknown' → warmth=0으로 설정해 지도/홈에서 제외.
+    event_count=0이거나 warmth < 20 AND topic='unknown' → warmth=0으로 설정해 지도/홈에서 제외.
     """
     print("[Step 5] 노이즈 클러스터 비활성화")
     result = await db.execute(text("""
         UPDATE story_clusters
-        SET severity = 0
-        WHERE (topic = 'unknown' AND severity < 20)
+        SET warmth = 0
+        WHERE (topic = 'unknown' AND warmth < 20)
            OR event_count = 0
         RETURNING id
     """))
@@ -348,7 +348,7 @@ async def main():
         await step2b_sync_cluster_topic(db)
 
     async with AsyncSessionLocal() as db:
-        await step3_sync_cluster_severity(db)
+        await step3_sync_cluster_warmth(db)
 
     async with AsyncSessionLocal() as db:
         await step3b_fix_empty_clusters(db)

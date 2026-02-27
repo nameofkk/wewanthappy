@@ -26,12 +26,12 @@ class AnonymousUser(HttpUser):
     @task(3)
     def get_issues(self):
         code = random.choice(COUNTRIES)
-        self.client.get(f"/issues?country_code={code}", name="/issues")
+        self.client.get(f"/stories?country_code={code}", name="/stories")
 
     @task(2)
     def get_tension_country(self):
         code = random.choice(COUNTRIES)
-        self.client.get(f"/tension/country/{code}", name="/tension/country/{code}")
+        self.client.get(f"/warmth/country/{code}", name="/warmth/country/{code}")
 
     @task(1)
     def health_check(self):
@@ -53,7 +53,7 @@ class AuthenticatedUser(HttpUser):
 
     @task(3)
     def get_tension_mine(self):
-        self.client.get("/tension/mine", headers=self.headers, name="/tension/mine")
+        self.client.get("/warmth/mine", headers=self.headers, name="/warmth/mine")
 
     @task(2)
     def get_my_areas(self):
@@ -67,7 +67,7 @@ class AuthenticatedUser(HttpUser):
     def get_tension_history_7d(self):
         code = random.choice(COUNTRIES)
         self.client.get(
-            f"/tension/country/{code}/history?range=7d",
+            f"/warmth/country/{code}/history?range=7d",
             headers=self.headers,
-            name="/tension/country/{code}/history?range=7d",
+            name="/warmth/country/{code}/history?range=7d",
         )

@@ -127,60 +127,60 @@ async def test_mine_trending_returns_list(client):
     assert isinstance(resp.json(), list)
 
 
-# ── /issues ───────────────────────────────────────────────────────────────────
+# ── /stories ──────────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_issues_returns_list(client):
-    resp = await client.get("/issues")
+async def test_stories_returns_list(client):
+    resp = await client.get("/stories")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
 
 @pytest.mark.asyncio
-async def test_issues_invalid_cluster_id(client):
-    resp = await client.get("/issues/not-a-uuid")
+async def test_stories_invalid_cluster_id(client):
+    resp = await client.get("/stories/not-a-uuid")
     assert resp.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_issues_not_found(client):
-    resp = await client.get("/issues/00000000-0000-0000-0000-000000000000")
+async def test_stories_not_found(client):
+    resp = await client.get("/stories/00000000-0000-0000-0000-000000000000")
     assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_issues_filter_by_severity(client):
-    resp = await client.get("/issues?severity_min=50")
+async def test_stories_filter_by_warmth(client):
+    resp = await client.get("/stories?warmth_min=50")
     assert resp.status_code == 200
     data = resp.json()
     assert all(item["warmth"] >= 50 for item in data)
 
 
-# ── /tension ──────────────────────────────────────────────────────────────────
+# ── /warmth ──────────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_tension_mine_returns_list(client):
-    resp = await client.get("/tension/mine")
+async def test_warmth_mine_returns_list(client):
+    resp = await client.get("/warmth/mine")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
 
 @pytest.mark.asyncio
-async def test_tension_country_ua_no_data(client):
+async def test_warmth_country_ua_no_data(client):
     """데이터 없으면 404."""
-    resp = await client.get("/tension/country/UA")
+    resp = await client.get("/warmth/country/UA")
     assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_tension_history_returns_list(client):
-    resp = await client.get("/tension/country/UA/history?range=7d")
+async def test_warmth_history_returns_list(client):
+    resp = await client.get("/warmth/country/UA/history?range=7d")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
 
 @pytest.mark.asyncio
-async def test_tension_history_invalid_range(client):
+async def test_warmth_history_invalid_range(client):
     """잘못된 range는 기본값(7d)으로 처리."""
-    resp = await client.get("/tension/country/UA/history?range=invalid")
+    resp = await client.get("/warmth/country/UA/history?range=invalid")
     assert resp.status_code == 200

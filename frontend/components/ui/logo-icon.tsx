@@ -53,10 +53,11 @@ export function LogoIcon({ height = 32, hideText = false }: { height?: number; h
         <Image
           src="/logo-eye.png"
           alt="WeWantHappy"
-          fill
+          width={width}
+          height={height}
           priority
           className="object-contain"
-          style={{ position: "relative", zIndex: 1 }}
+          style={{ position: "relative", zIndex: 1, width: "100%", height: "100%" }}
         />
       </div>
 

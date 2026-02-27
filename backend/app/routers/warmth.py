@@ -288,7 +288,7 @@ async def warmth_mine(
         )
         pref = pref_result.scalar_one_or_none()
         if pref:
-            user_min_warmth = pref.min_severity
+            user_min_warmth = pref.min_warmth
 
     # ── DB에서 국가별 최신 1건만 조회 (DISTINCT ON) ──
     raw_result = await db.execute(

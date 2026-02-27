@@ -98,8 +98,8 @@ def _area_to_out(a: UserArea) -> AreaOut:
 def _pref_to_out(p: UserPreference) -> PreferencesOut:
     return PreferencesOut(
         language=p.language,
-        min_warmth=p.min_severity,
-        min_hscore=p.min_kscore,
+        min_warmth=p.min_warmth,
+        min_hscore=p.min_hscore,
         topics=p.topics or [],
         quiet_hours_start=p.quiet_hours_start.isoformat() if p.quiet_hours_start else None,
         quiet_hours_end=p.quiet_hours_end.isoformat() if p.quiet_hours_end else None,
@@ -280,12 +280,12 @@ async def update_preferences(
     if body.language is not None:
         pref.language = body.language
     if body.min_warmth is not None:
-        pref.min_severity = body.min_warmth
+        pref.min_warmth = body.min_warmth
     if body.min_hscore is not None:
         # Free 플랜은 3.0 고정, Pro는 3.0~10.0, Pro+는 1.5~10.0 (0-10 스케일)
         plan_lower = current_user.plan.lower()
         min_allowed = 3.0 if plan_lower == "free" else (1.5 if plan_lower == "pro_plus" else 3.0)
-        pref.min_kscore = max(min_allowed, min(body.min_hscore, 10.0))
+        pref.min_hscore = max(min_allowed, min(body.min_hscore, 10.0))
     if body.topics is not None:
         # 토픽 필터는 Pro 이상만 허용
         if body.topics and _PLAN_ORDER.get(current_user.plan.lower(), 0) < _PLAN_ORDER.get("pro", 1):
