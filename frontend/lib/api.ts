@@ -10,6 +10,12 @@ function getAuthHeaders(): Record<string, string> {
   return {};
 }
 
+/** 인증 토큰이 있는지 확인 (dev_uid 또는 firebase_token) */
+function hasAuthToken(): boolean {
+  if (typeof window === "undefined") return false;
+  return !!(localStorage.getItem("dev_uid") || localStorage.getItem("firebase_token"));
+}
+
 async function apiFetch<T>(
   path: string,
   params?: Record<string, string>,
@@ -159,6 +165,7 @@ export function useMe() {
   return useQuery({
     queryKey: ["me"],
     queryFn: () => apiFetch("/me"),
+    enabled: hasAuthToken(),
     retry: false,
     staleTime: 30 * 1000,
     refetchOnMount: "always",
@@ -169,6 +176,7 @@ export function useMyAreas() {
   return useQuery({
     queryKey: ["me", "areas"],
     queryFn: () => apiFetch<UserArea[]>("/me/areas"),
+    enabled: hasAuthToken(),
     retry: false,
   });
 }
@@ -177,6 +185,7 @@ export function useMyPreferences() {
   return useQuery({
     queryKey: ["me", "preferences"],
     queryFn: () => apiFetch<UserPreferences>("/me/preferences"),
+    enabled: hasAuthToken(),
     retry: false,
   });
 }
@@ -278,6 +287,7 @@ export function useNotifications(limit = 30, offset = 0) {
         limit: String(limit),
         offset: String(offset),
       }),
+    enabled: hasAuthToken(),
     retry: false,
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
@@ -288,7 +298,7 @@ export function useUnreadCount(enabled = true) {
   return useQuery({
     queryKey: ["me", "notifications", "unread-count"],
     queryFn: () => apiFetch<{ unread: number }>("/me/notifications/unread-count"),
-    enabled,
+    enabled: enabled && hasAuthToken(),
     retry: false,
     staleTime: 30 * 1000,
     refetchInterval: enabled ? 60 * 1000 : false,
