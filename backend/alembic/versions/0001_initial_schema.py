@@ -266,7 +266,7 @@ def upgrade() -> None:
     op.create_index(
         "idx_kw_scope_score",
         "trending_keywords",
-        ["scope", sa.text("kscore DESC"), "calculated_at"],
+        ["scope", sa.text("hscore DESC"), "calculated_at"],
     )
 
     # users
